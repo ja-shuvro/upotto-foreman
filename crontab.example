@@ -1,0 +1,13 @@
+# Daily Project Agent — crontab entry
+# Runs daily_loop.py every day at 09:00 (adjust TZ / path / venv as needed).
+#
+# Install:
+#   crontab -e
+#   (paste the line below)
+#
+# Or on Windows Task Scheduler, trigger the equivalent PowerShell command at 09:00.
+
+0 9 * * * cd /path/to/project-agent && /path/to/project-agent/.venv/bin/python daily_loop.py --yes >> /path/to/project-agent/logs/cron.log 2>&1
+
+# Optional: keep the Flask approval webhook always up (separate process / systemd)
+# @reboot cd /path/to/project-agent && /path/to/project-agent/.venv/bin/python webhook.py >> /path/to/project-agent/logs/webhook.log 2>&1
