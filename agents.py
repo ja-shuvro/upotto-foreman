@@ -8,8 +8,8 @@ from functools import wraps
 from typing import Any, Callable
 
 from crewai import Agent, LLM
+from crewai.tools import BaseTool as CrewBaseTool
 from crewai_tools import (
-    DirectoryReadTool,
     FileReadTool,
     FileWriterTool,
 )
@@ -41,10 +41,50 @@ def _require_env(name: str) -> str:
     return value
 
 
+def _bare_model_name(raw: str) -> str:
+    """Strip any provider prefix the user may have typed (anthropic/, openrouter/)."""
+    for prefix in ("openrouter/anthropic/", "openrouter/", "anthropic/"):
+        if raw.startswith(prefix):
+            return raw[len(prefix):]
+    return raw
+
+
 def build_crew_llm(*, temperature: float = 0.2) -> LLM:
-    """crewai.LLM (litellm-backed) — THIS is what Agent(llm=...) must receive."""
+    """crewai.LLM (litellm-backed) — THIS is what Agent(llm=...) must receive.
+
+    Supports either direct Anthropic API or OpenRouter, based on which key is set.
+    Set LLM_PROVIDER=openrouter in .env to route through OpenRouter instead of
+    api.anthropic.com directly.
+    """
+    provider = os.getenv("LLM_PROVIDER", "anthropic").strip().lower()
+    bare_model = _bare_model_name(os.getenv("ANTHROPIC_MODEL", DEFAULT_MODEL).strip())
+
+    if provider == "agentrouter":
+        # AgentRouter is an Anthropic-Messages-API-compatible relay — same wire
+        # format as api.anthropic.com, just a different base_url + key.
+        api_key = _require_env("AGENTROUTER_API_KEY")
+        return LLM(
+            model=f"anthropic/{bare_model}",
+            api_key=api_key,
+            base_url=os.getenv("AGENTROUTER_BASE_URL", "https://agentrouter.org"),
+            temperature=temperature,
+            max_tokens=int(os.getenv("ANTHROPIC_MAX_TOKENS", "8192")),
+        )
+
+    if provider == "openrouter":
+        api_key = _require_env("OPENROUTER_API_KEY")
+        # litellm reads this env var itself for the native "openrouter/" provider path —
+        # setting it explicitly avoids edge cases where only api_key= isn't picked up.
+        os.environ.setdefault("OPENROUTER_API_KEY", api_key)
+        return LLM(
+            model=f"openrouter/{bare_model}",
+            api_key=api_key,
+            temperature=temperature,
+            max_tokens=int(os.getenv("ANTHROPIC_MAX_TOKENS", "8192")),
+        )
+
     return LLM(
-        model=f"anthropic/{DEFAULT_MODEL}",
+        model=f"anthropic/{bare_model}",
         api_key=_require_env("ANTHROPIC_API_KEY"),
         temperature=temperature,
         max_tokens=int(os.getenv("ANTHROPIC_MAX_TOKENS", "8192")),
@@ -99,10 +139,48 @@ def invoke_with_tracking(
     return response
 
 
+_IGNORED_DIRS = {".git", "__pycache__", "node_modules", ".venv", "venv"}
+
+
+class ProjectDirectoryScanTool(CrewBaseTool):
+    """List project files, skipping .git/__pycache__/venv noise that burns context
+    and starves the LLM's output token budget (was causing empty LLM responses)."""
+
+    name: str = "list_project_files"
+    description: str = (
+        "List all real project files under the project directory, excluding "
+        ".git, __pycache__, node_modules, and venv folders. Input: ignored, "
+        "always scans the configured project directory."
+    )
+
+    def _run(self, *_args: Any, **_kwargs: Any) -> str:
+        paths: list[str] = []
+        for root, dirs, files in os.walk(PROJECT_DIR):
+            dirs[:] = [d for d in dirs if d not in _IGNORED_DIRS]
+            for f in files:
+                paths.append(os.path.join(root, f))
+        if not paths:
+            return f"No files found under {PROJECT_DIR}."
+        return "File paths:\n" + "\n".join(f"- {p}" for p in paths)
+
+
+class DuckDuckGoSearchTool(CrewBaseTool):
+    """crewai-native wrapper around langchain's free DuckDuckGoSearchRun."""
+
+    name: str = "web_search"
+    description: str = (
+        "Search the web (DuckDuckGo, free, no API key) for current industry-standard "
+        "practices, docs, or news relevant to the project. Input: a search query string."
+    )
+
+    def _run(self, query: str) -> str:
+        return DuckDuckGoSearchRun().run(query)
+
+
 def create_architect(llm: Any | None = None) -> Agent:
-    directory_tool = DirectoryReadTool(directory=PROJECT_DIR)
+    directory_tool = ProjectDirectoryScanTool()
     file_read_tool = FileReadTool()
-    search_tool = DuckDuckGoSearchRun()  # free — no API key, no cost
+    search_tool = DuckDuckGoSearchTool()  # free — no API key, no cost
 
     return Agent(
         role="Senior Software Architect",
