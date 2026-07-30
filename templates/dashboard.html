@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Upotto Foreman{% endblock %}
+{% block content %}
+<section class="hero-row">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="muted">{{ project_dir }}</p>
+  </div>
+  <div class="status-pill status-{{ snap.status }}">{{ snap.status | upper }}</div>
+</section>
+
+<div class="grid two">
+  <div class="panel">
+    <h2>Controls</h2>
+    <div class="row gap">
+      <form method="post" action="{{ url_for('action_run_start') }}">
+        <button class="btn primary" type="submit" {% if snap.running %}disabled{% endif %}>Start run</button>
+      </form>
+      <form method="post" action="{{ url_for('action_run_stop') }}">
+        <button class="btn danger" type="submit" {% if not snap.running %}disabled{% endif %}>Stop</button>
+      </form>
+      <button class="btn" type="button" id="refresh-status">Refresh</button>
+    </div>
+    <ul class="meta">
+      <li>Git: {% if git_ok %}<span class="ok">ready</span>{% else %}<span class="warn">not initialized</span>{% endif %}</li>
+      <li>Docs: {{ docs | selectattr('present') | list | length }}/{{ docs | length }} present</li>
+      <li>Last run: {{ snap.last_run or 'never' }}</li>
+    </ul>
+    {% if snap.last_error %}
+    <pre class="error-box">{{ snap.last_error }}</pre>
+    {% endif %}
+  </div>
+
+  <div class="panel">
+    <h2>Last summary</h2>
+    <pre class="scroll">{{ snap.last_summary or 'No summary yet.' }}</pre>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Current plan</h2>
+  <pre class="scroll tall">{{ snap.current_plan or 'No plan yet.' }}</pre>
+</div>
+
+{% if snap.pending_approval and snap.pending_approval.status == 'pending' %}
+<div class="panel warn-panel">
+  <h2>Pending approval</h2>
+  <p>{{ snap.pending_approval.reason }}</p>
+  <a class="btn primary" href="{{ url_for('approvals_page') }}">Open Approvals</a>
+</div>
+{% endif %}
+{% endblock %}

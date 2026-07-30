@@ -24,6 +24,7 @@ from tenacity import (
 )
 
 from code_tool import build_code_execution_tool
+from config import get_project_dir
 from cost_tracker import CostTracker
 
 load_dotenv()
@@ -31,7 +32,10 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 DEFAULT_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5")
-PROJECT_DIR = os.getenv("PROJECT_DIR", str((__import__("pathlib").Path(__file__).parent / "target_project").resolve()))
+
+
+def _project_dir_str() -> str:
+    return str(get_project_dir())
 
 
 def _require_env(name: str) -> str:
@@ -154,13 +158,14 @@ class ProjectDirectoryScanTool(CrewBaseTool):
     )
 
     def _run(self, *_args: Any, **_kwargs: Any) -> str:
+        project_dir = _project_dir_str()
         paths: list[str] = []
-        for root, dirs, files in os.walk(PROJECT_DIR):
+        for root, dirs, files in os.walk(project_dir):
             dirs[:] = [d for d in dirs if d not in _IGNORED_DIRS]
             for f in files:
                 paths.append(os.path.join(root, f))
         if not paths:
-            return f"No files found under {PROJECT_DIR}."
+            return f"No files found under {project_dir}."
         return "File paths:\n" + "\n".join(f"- {p}" for p in paths)
 
 

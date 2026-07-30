@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Approvals — Upotto Foreman{% endblock %}
+{% block content %}
+<h1>Approvals</h1>
+
+{% if pending and pending.status == 'pending' %}
+<div class="panel warn-panel">
+  <h2>Pending</h2>
+  <p><strong>Reason:</strong> {{ pending.reason }}</p>
+  <p class="muted">Requested: {{ pending.requested_at }}</p>
+  <pre class="scroll tall">{{ pending.plan or '' }}</pre>
+  <div class="row gap">
+    <form method="post" action="{{ url_for('action_approve') }}">
+      <input type="hidden" name="approved" value="true" />
+      <button class="btn primary" type="submit">Approve</button>
+    </form>
+    <form method="post" action="{{ url_for('action_approve') }}">
+      <input type="hidden" name="approved" value="false" />
+      <button class="btn danger" type="submit">Reject</button>
+    </form>
+  </div>
+  <p class="muted">You can also reply YES / NO in Telegram.</p>
+</div>
+{% elif pending %}
+<div class="panel">
+  <h2>Last decision</h2>
+  <p>Status: <strong>{{ pending.status }}</strong> ({{ pending.source }})</p>
+  <p>{{ pending.reason }}</p>
+</div>
+{% else %}
+<div class="panel">
+  <p>No pending approval.</p>
+</div>
+{% endif %}
+{% endblock %}

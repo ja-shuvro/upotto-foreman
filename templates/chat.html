@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Chat — Upotto Foreman{% endblock %}
+{% block content %}
+<h1>Chat</h1>
+<p class="muted">Ask about project status (same backend as Telegram free-text chat).</p>
+
+<div class="panel chat-panel">
+  {% for turn in history %}
+  <div class="bubble user"><strong>You</strong><div>{{ turn.question }}</div></div>
+  <div class="bubble agent"><strong>Agent</strong><div>{{ turn.answer }}</div></div>
+  {% else %}
+  <p class="muted">No messages yet.</p>
+  {% endfor %}
+</div>
+
+<form method="post" action="{{ url_for('action_chat') }}" class="row gap">
+  <input class="grow" type="text" name="message" placeholder="Project er ki obostha?" required />
+  <button class="btn primary" type="submit">Send</button>
+</form>
+{% endblock %}

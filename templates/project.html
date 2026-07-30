@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Project — Upotto Foreman{% endblock %}
+{% block content %}
+<h1>Project</h1>
+
+<div class="panel">
+  <h2>Project path</h2>
+  <form method="post" action="{{ url_for('action_project') }}" class="row gap wrap">
+    <input class="grow" type="text" name="path" value="{{ project_dir }}" placeholder="C:\langs\projects\todo-app" />
+    <button class="btn primary" type="submit">Save path</button>
+  </form>
+  <p class="muted">Git: {% if git_ok %}<span class="ok">.git found</span>{% else %}<span class="warn">Run git init in this folder</span>{% endif %}</p>
+</div>
+
+<div class="panel">
+  <h2>Spec docs (required)</h2>
+  <table class="table">
+    <thead><tr><th>File</th><th>Status</th><th>Size</th></tr></thead>
+    <tbody>
+      {% for d in docs %}
+      <tr>
+        <td>{{ d.name }}</td>
+        <td>{% if d.present %}<span class="ok">present</span>{% else %}<span class="warn">missing</span>{% endif %}</td>
+        <td>{{ d.size }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="grid two">
+  <div class="panel">
+    <h2>Upload MD file</h2>
+    <form method="post" action="{{ url_for('action_docs') }}" enctype="multipart/form-data" class="stack">
+      <label>Target name
+        <select name="upload_name">
+          {% for name in required %}
+          <option value="{{ name }}">{{ name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <input type="file" name="file" accept=".md,text/markdown,text/plain" required />
+      <button class="btn primary" type="submit">Upload</button>
+    </form>
+  </div>
+  <div class="panel">
+    <h2>Paste / edit content</h2>
+    <form method="post" action="{{ url_for('action_docs') }}" class="stack">
+      <label>File
+        <select name="name">
+          {% for name in required %}
+          <option value="{{ name }}">{{ name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <textarea name="content" rows="12" placeholder="Paste markdown…"></textarea>
+      <button class="btn primary" type="submit">Save content</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

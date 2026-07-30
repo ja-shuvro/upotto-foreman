@@ -6,16 +6,13 @@ import logging
 import os
 import subprocess
 import sys
-from pathlib import Path
 from typing import Any, Type
 
 from pydantic import BaseModel, Field
 
-logger = logging.getLogger(__name__)
+from config import get_project_dir
 
-PROJECT_DIR = Path(
-    os.getenv("PROJECT_DIR", str((Path(__file__).parent / "target_project").resolve()))
-).resolve()
+logger = logging.getLogger(__name__)
 
 MAX_OUTPUT_CHARS = int(os.getenv("CODE_TOOL_MAX_OUTPUT_CHARS", "20000"))
 
@@ -92,8 +89,9 @@ class LocalCodeExecutionTool(BaseTool):  # type: ignore[misc]
     args_schema: Type[BaseModel] = CodeExecutionInput
 
     def _run(self, command: str, timeout_seconds: int = 120) -> str:
-        if not PROJECT_DIR.exists():
-            return f"ERROR: PROJECT_DIR does not exist: {PROJECT_DIR}"
+        project_dir = get_project_dir()
+        if not project_dir.exists():
+            return f"ERROR: PROJECT_DIR does not exist: {project_dir}"
 
         if not _is_allowed(command):
             logger.warning("Blocked disallowed command: %s", command)
@@ -109,7 +107,7 @@ class LocalCodeExecutionTool(BaseTool):  # type: ignore[misc]
                 capture_output=True,
                 text=True,
                 timeout=timeout_seconds,
-                cwd=str(PROJECT_DIR),  # <-- runs INSIDE real project, not a tempdir
+                cwd=str(project_dir),
             )
         except subprocess.TimeoutExpired:
             logger.error("Code execution timed out after %ss", timeout_seconds)
@@ -121,7 +119,7 @@ class LocalCodeExecutionTool(BaseTool):  # type: ignore[misc]
         out = _truncate(completed.stdout or "")
         err = _truncate(completed.stderr or "")
         return (
-            f"cwd={PROJECT_DIR}\n"
+            f"cwd={project_dir}\n"
             f"exit_code={completed.returncode}\n"
             f"--- stdout ---\n{out}\n"
             f"--- stderr ---\n{err}"

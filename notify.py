@@ -32,8 +32,17 @@ def _clip(text: str, limit: int = TELEGRAM_MAX_CHARS) -> str:
     return text[:limit] + f"\n...[truncated, {len(text)} chars total]"
 
 
-def send_telegram(body: str, *, chat_id: str | None = None) -> dict[str, Any]:
-    """Send a message via Telegram Bot API — free, no per-message cost."""
+def send_telegram(
+    body: str,
+    *,
+    chat_id: str | None = None,
+    parse_mode: str | None = "HTML",
+) -> dict[str, Any]:
+    """Send a message via Telegram Bot API — free, no per-message cost.
+
+    parse_mode defaults to HTML so Markdown-converted agent replies render bold/code/lists.
+    Pass parse_mode=None for plain text.
+    """
     bot_token = _env("TELEGRAM_BOT_TOKEN")
     target_chat_id = chat_id or _env("TELEGRAM_CHAT_ID")
 
@@ -43,14 +52,24 @@ def send_telegram(body: str, *, chat_id: str | None = None) -> dict[str, Any]:
 
     safe_body = _clip(body)
     url = f"{TELEGRAM_API_BASE}/bot{bot_token}/sendMessage"
+    payload: dict[str, Any] = {"chat_id": target_chat_id, "text": safe_body}
+    if parse_mode:
+        payload["parse_mode"] = parse_mode
+        payload["disable_web_page_preview"] = True
 
     try:
-        resp = requests.post(
-            url,
-            json={"chat_id": target_chat_id, "text": safe_body},
-            timeout=15,
-        )
+        resp = requests.post(url, json=payload, timeout=15)
         data = resp.json()
+        if not data.get("ok") and parse_mode:
+            # Fallback plain text if HTML parse fails
+            logger.warning("Telegram HTML send failed (%s) — retrying plain", data)
+            payload.pop("parse_mode", None)
+            resp = requests.post(
+                url,
+                json={"chat_id": target_chat_id, "text": safe_body},
+                timeout=15,
+            )
+            data = resp.json()
         if not data.get("ok"):
             logger.error("Telegram send failed: %s", data)
             return {"ok": False, "error": data.get("description", "unknown_error")}
@@ -106,18 +125,34 @@ def notify_daily_summary(summary: str, cost_line: str = "") -> None:
     body = summary.strip()
     if cost_line:
         body = f"{body}\n\n{cost_line}"
-    send_telegram(f"📋 Daily Agent Summary\n\n{body}")
+    send_telegram(f"Daily Agent Summary\n\n{body}")
     send_email("Daily Project Agent Summary", body)
 
 
 def notify_approval_request(reason: str, plan_excerpt: str = "") -> None:
     webhook_base = _env("WEBHOOK_PUBLIC_URL", "http://localhost:5000")
     body = (
-        "⚠️ Approval needed\n\n"
+        "Approval needed\n\n"
         f"Reason: {reason}\n\n"
         f"{plan_excerpt[:1500]}\n\n"
-        "Approve: reply YES/NO directly in this Telegram chat, "
-        f'or POST {webhook_base}/approve with header X-Approval-Secret and JSON {{"approved": true}}'
+        "Reply YES or NO in Telegram, or use the desktop Approvals screen.\n"
+        f'API: POST {webhook_base}/approve with X-Approval-Secret and {{"approved": true}}'
     )
     send_telegram(body)
     send_email("NEEDS_APPROVAL — Project Agent", body)
+
+
+def notify_run_event(event: str, detail: str = "") -> None:
+    """Push run lifecycle events to Telegram (start/stop/fail/pending)."""
+    labels = {
+        "started": "RUNNING — agent loop started",
+        "finished": "IDLE — agent loop finished",
+        "failed": "IDLE — agent loop FAILED",
+        "pending_approval": "PENDING APPROVAL — waiting for YES/NO",
+        "stopping": "STOPPING — stop requested",
+        "stopped": "IDLE — stopped",
+    }
+    title = labels.get(event, f"Event: {event}")
+    body = title if not detail else f"{title}\n\n{detail}"
+    send_telegram(body)
+

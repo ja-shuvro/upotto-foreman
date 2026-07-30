@@ -22,6 +22,13 @@ DEFAULT_STATE: dict[str, Any] = {
     "last_run": None,
     "cost_history": [],
     "current_plan": None,
+    "last_summary": None,
+    "project_dir": None,
+    "run_status": "idle",
+    "run_updated_at": None,
+    "last_error": None,
+    "last_result": None,
+    "chat_history": [],
 }
 
 

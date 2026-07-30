@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Logs — Upotto Foreman{% endblock %}
+{% block content %}
+<h1>Logs</h1>
+
+<div class="panel">
+  <h2>State log history</h2>
+  <pre class="scroll tall">{% for e in history[-100:] %}[{{ e.timestamp }}] {{ e.level }} — {{ e.message }}
+{% else %}(empty){% endfor %}</pre>
+</div>
+
+<div class="panel">
+  <h2>File log tail</h2>
+  <pre class="scroll tall">{{ file_tail or '(no log file yet)' }}</pre>
+</div>
+{% endblock %}

@@ -206,6 +206,15 @@ def run_daily_loop(*, skip_human_input: bool = False) -> dict:
             append_log(state, "Pending approval granted — continuing to Developer")
             logger.info("Approval granted — continuing to Developer")
 
+    try:
+        from runner import stop_requested
+
+        if stop_requested():
+            append_log(state, "Stop requested after plan — aborting before developer")
+            return {"status": "stopped", "plan": plan_text}
+    except ImportError:
+        pass
+
     # --- 2) Developer: dev_task (plan injected directly into description — see below) ---
     # --- 3) Architect: summary_task (context = dev_task only; plan injected via description) ---
     log_agent_action("Developer", "dev_task_start")

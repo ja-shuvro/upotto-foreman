@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Settings — Upotto Foreman{% endblock %}
+{% block content %}
+<h1>Settings</h1>
+<form method="post" action="{{ url_for('action_settings') }}" class="stack">
+  <div class="panel">
+    <h2>Windows Startup</h2>
+    <label class="row gap">
+      <input type="checkbox" name="startup_enabled" value="1" {% if startup_enabled %}checked{% endif %} />
+      Open Upotto Foreman when Windows starts
+    </label>
+  </div>
+
+  <div class="panel">
+    <h2>Environment</h2>
+    <div class="settings-grid">
+      {% for key, val in settings.items() %}
+      <label>{{ key }}
+        <input type="text" name="{{ key }}" value="{{ val }}" autocomplete="off" />
+      </label>
+      {% endfor %}
+    </div>
+    <p class="muted">Secret fields show a masked value — leave unchanged to keep the current secret.</p>
+  </div>
+
+  <button class="btn primary" type="submit">Save settings</button>
+</form>
+{% endblock %}
