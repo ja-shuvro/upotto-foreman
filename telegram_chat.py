@@ -6,7 +6,15 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from config import get_project_dir, read_doc_excerpts
+from config import (
+    ALLOWED_BASE_DIR,
+    AUTHORIZED_TELEGRAM_CHAT_ID,
+    get_project_dir,
+    list_allowed_projects,
+    read_doc_excerpts,
+    resolve_project_under_base,
+    set_project_dir,
+)
 from runner import get_runner_snapshot
 from state import load_state, save_state
 
@@ -16,7 +24,10 @@ logger = logging.getLogger(__name__)
 def format_status_message() -> str:
     snap = get_runner_snapshot()
     status = snap.get("status") or "idle"
-    project = snap.get("project_dir") or str(get_project_dir())
+    try:
+        project = str(get_project_dir())
+    except Exception:  # noqa: BLE001
+        project = snap.get("project_dir") or "?"
     pending = snap.get("pending_approval")
     plan = (snap.get("current_plan") or "")[:800]
     summary = (snap.get("last_summary") or "")[:800]
@@ -26,11 +37,16 @@ def format_status_message() -> str:
     if isinstance(last_cost, dict):
         cost_line = f"Last cost: ${last_cost.get('total_cost_usd', '?')}"
 
+    state = load_state()
+    directive = (state.get("user_directive") or "").strip()
+
     lines = [
         f"Status: {status.upper()}",
         f"Project: {project}",
         f"Last run: {snap.get('last_run') or 'never'}",
     ]
+    if directive:
+        lines.append(f"Queued task: {directive[:300]}")
     if cost_line:
         lines.append(cost_line)
     if pending and (pending.get("status") == "pending" or not pending.get("approved")):
@@ -109,10 +125,71 @@ def help_text() -> str:
     return (
         "Upotto Foreman Telegram commands:\n"
         "/status — running / idle / pending approval\n"
+        "/currentproject — active PROJECT_DIR\n"
+        "/listprojects — folders under C:\\langs\\projects\n"
+        "/setproject <folder> — switch project (sandbox)\n"
+        "/newtask <text> — queue priority directive for next run\n"
+        "/runnow — start daily loop now\n"
         "/help — this message\n"
         "YES / NO — approve or reject pending change\n"
         "Any other message — chat with the agent (replies here on Telegram)\n"
     )
+
+
+def _cmd_setproject(arg: str) -> str:
+    try:
+        path = resolve_project_under_base(arg)
+        resolved = set_project_dir(path)
+        return f"Project switched to: {resolved}"
+    except ValueError as exc:
+        return f"ERROR: {exc}"
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("setproject failed")
+        return f"ERROR: could not switch project ({exc})"
+
+
+def _cmd_newtask(arg: str) -> str:
+    text = (arg or "").strip()
+    if not text:
+        return "ERROR: usage — /newtask <description>"
+    state = load_state()
+    state["user_directive"] = text
+    save_state(state)
+    return f"Task queued for next run: {text}"
+
+
+def _cmd_listprojects() -> str:
+    names = list_allowed_projects()
+    if not names:
+        return f"No projects found under {ALLOWED_BASE_DIR}"
+    lines = [f"Projects under {ALLOWED_BASE_DIR}:"]
+    for i, name in enumerate(names, 1):
+        lines.append(f"{i}. {name}")
+    lines.append("\nUse: /setproject <folder>  e.g. /setproject frontend/agriflow-landing")
+    return "\n".join(lines)
+
+
+def _cmd_currentproject() -> str:
+    try:
+        return f"Current project: {get_project_dir()}"
+    except ValueError as exc:
+        return f"ERROR: {exc}"
+
+
+def _cmd_runnow() -> str:
+    from runner import get_runner_snapshot, start_run
+
+    snap = get_runner_snapshot()
+    if snap.get("running"):
+        return "ERROR: a run is already in progress"
+    result = start_run(skip_human_input=True)
+    if not result.get("ok"):
+        return f"ERROR: {result.get('error') or 'could not start'}"
+    try:
+        project = get_project_dir()
+    except ValueError as exc:
+        return f"ERROR: {exc}"
+    return f"Run started for: {project}"
 
 
 def handle_telegram_text(text: str) -> dict[str, Any]:
@@ -125,14 +202,41 @@ def handle_telegram_text(text: str) -> dict[str, Any]:
     if upper in {"NO", "REJECT", "REJECTED", "N"}:
         return {"kind": "approve", "approved": False, "reply": None}
 
-    cmd = raw.lower().lstrip("/")
-    if cmd in {"status", "stat"}:
+    # Parse /command args (Telegram may send /cmd@BotName)
+    if raw.startswith("/"):
+        parts = raw.split(maxsplit=1)
+        cmd_token = parts[0][1:]
+        cmd = cmd_token.split("@", 1)[0].lower()
+        arg = parts[1].strip() if len(parts) > 1 else ""
+
+        if cmd in {"status", "stat"}:
+            return {"kind": "status", "reply": format_status_message()}
+        if cmd in {"help", "start"}:
+            return {"kind": "help", "reply": help_text()}
+        if cmd == "setproject":
+            return {"kind": "setproject", "reply": _cmd_setproject(arg)}
+        if cmd == "newtask":
+            return {"kind": "newtask", "reply": _cmd_newtask(arg)}
+        if cmd == "listprojects":
+            return {"kind": "listprojects", "reply": _cmd_listprojects()}
+        if cmd == "currentproject":
+            return {"kind": "currentproject", "reply": _cmd_currentproject()}
+        if cmd == "runnow":
+            return {"kind": "runnow", "reply": _cmd_runnow()}
+
+    # Legacy bare commands without slash
+    lower = raw.lower()
+    if lower in {"status", "stat"}:
         return {"kind": "status", "reply": format_status_message()}
-    if cmd in {"help", "start"}:
+    if lower in {"help", "start"}:
         return {"kind": "help", "reply": help_text()}
 
     if not raw:
         return {"kind": "empty", "reply": help_text()}
 
-    # Chat — caller should reply async so Telegram webhook doesn't time out
     return {"kind": "chat", "reply": None, "question": raw, "async": True}
+
+
+def is_authorized_telegram_chat(chat_id: str | int | None) -> bool:
+    """Strict gate: only AUTHORIZED_TELEGRAM_CHAT_ID may control the bot."""
+    return str(chat_id or "").strip() == AUTHORIZED_TELEGRAM_CHAT_ID

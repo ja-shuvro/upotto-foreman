@@ -14,23 +14,39 @@ def create_plan_task(architect: Agent) -> Task:
     # Same loader as bootstrap — inject brief so Architect sees identical docs
     brief = load_project_brief(max_chars_per_file=8000)
 
+    directive_block = ""
+    try:
+        from state import load_state
+
+        directive = (load_state().get("user_directive") or "").strip()
+        if directive:
+            directive_block = (
+                f"USER DIRECTIVE (priority): {directive}\n"
+                "Incorporate this into today's plan as the highest priority. "
+                "Scan + auto-discover only fills gaps around it.\n\n"
+            )
+    except Exception:  # noqa: BLE001
+        pass
+
     return Task(
         description=(
             f"You are planning today's engineering work for the project at: {project_dir}\n\n"
+            f"{directive_block}"
             f"{brief}\n\n"
             f"REQUIRED: Treat the Project Brief above as authoritative. You may also re-read "
             f"files under {docs_dir} ({docs_list}) with FileReadTool if needed.\n"
             "Use list_project_files to scan the codebase after reviewing the docs.\n"
             "Also consider git state (uncommitted work) when choosing the next task.\n\n"
             "Steps:\n"
-            "1. Internalize PRD / Architecture / Design / Memory / Phases / Rules from the brief.\n"
-            "2. Scan the project structure and key source files.\n"
-            "3. Use web_search for industry-standard approaches relevant to the next step "
+            "1. Internalize the USER DIRECTIVE (if present) — it outranks auto-discovery.\n"
+            "2. Internalize PRD / Architecture / Design / Memory / Phases / Rules from the brief.\n"
+            "3. Scan the project structure and key source files (fill gaps around the directive).\n"
+            "4. Use web_search for industry-standard approaches relevant to the next step "
             "in Phases.md / PRD.\n"
-            "4. Decide the single best next task for today (one focused change).\n"
-            "5. Produce a clear implementation plan: goals, files to touch, tests, "
+            "5. Decide the single best next task for today (one focused change).\n"
+            "6. Produce a clear implementation plan: goals, files to touch, tests, "
             "acceptance criteria, and risks.\n"
-            "6. If the change is large / architectural / breaking, include exactly:\n"
+            "7. If the change is large / architectural / breaking, include exactly:\n"
             "   NEEDS_APPROVAL: <reason>\n"
             "   Otherwise state: APPROVED_FOR_DEV (no human approval gate).\n"
             "Respect Rules.md constraints at all times.\n\n"

@@ -6,11 +6,12 @@ import logging
 import os
 import subprocess
 import sys
+from pathlib import Path
 from typing import Any, Type
 
 from pydantic import BaseModel, Field
 
-from config import get_project_dir
+from config import get_project_dir, validate_project_path
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +90,12 @@ class LocalCodeExecutionTool(BaseTool):  # type: ignore[misc]
     args_schema: Type[BaseModel] = CodeExecutionInput
 
     def _run(self, command: str, timeout_seconds: int = 120) -> str:
-        project_dir = get_project_dir()
+        try:
+            project_dir = Path(validate_project_path(get_project_dir()))
+        except ValueError as exc:
+            logger.error("Sandbox blocked code_execution cwd: %s", exc)
+            return f"ERROR: sandbox — {exc}"
+
         if not project_dir.exists():
             return f"ERROR: PROJECT_DIR does not exist: {project_dir}"
 

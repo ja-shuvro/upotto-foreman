@@ -35,8 +35,24 @@ def _bot_token() -> str | None:
     return _env("TELEGRAM_BOT_TOKEN")
 
 
-def _allowed_chat_id() -> str | None:
-    return _env("TELEGRAM_CHAT_ID")
+def _allowed_chat_id() -> str:
+    """Authorized operator chat — hardcoded gate, env must match if set."""
+    from config import AUTHORIZED_TELEGRAM_CHAT_ID
+
+    env_id = (_env("TELEGRAM_CHAT_ID") or "").strip()
+    if env_id and env_id != AUTHORIZED_TELEGRAM_CHAT_ID:
+        logger.warning(
+            "TELEGRAM_CHAT_ID=%s ignored — using authorized id %s",
+            env_id,
+            AUTHORIZED_TELEGRAM_CHAT_ID,
+        )
+    return AUTHORIZED_TELEGRAM_CHAT_ID
+
+
+def _is_authorized(chat_id: str) -> bool:
+    from telegram_chat import is_authorized_telegram_chat
+
+    return is_authorized_telegram_chat(chat_id)
 
 
 def _api(method: str, **params: Any) -> dict[str, Any]:
@@ -84,8 +100,13 @@ def _handle_update(update: dict[str, Any]) -> None:
         return
 
     allowed = _allowed_chat_id()
-    if allowed and chat_id != str(allowed):
-        logger.warning("Ignoring Telegram chat_id=%s (expected %s)", chat_id, allowed)
+    if not _is_authorized(chat_id):
+        logger.warning(
+            "Ignored unauthorized Telegram chat_id=%s (authorized=%s) text=%r",
+            chat_id,
+            allowed,
+            text[:80],
+        )
         return
 
     from telegram_chat import answer_project_question, handle_telegram_text

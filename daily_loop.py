@@ -28,6 +28,7 @@ from state import (
     is_approval_granted,
     load_state,
     mark_completed,
+    save_state,
     update_after_run,
 )
 from tasks import create_dev_task, create_plan_task, create_summary_task
@@ -125,9 +126,39 @@ def run_daily_loop(*, skip_human_input: bool = False, skip_bootstrap: bool = Fal
     setup_logging()
     logger.info("=== Daily loop started ===")
 
+    # Defense-in-depth: re-validate PROJECT_DIR before any agent work
+    try:
+        from config import get_project_dir, validate_project_path
+
+        project_dir = get_project_dir()
+        validate_project_path(project_dir)
+        logger.info("Sandbox OK — PROJECT_DIR=%s", project_dir)
+    except ValueError as exc:
+        logger.error("Sandbox validation failed — aborting run: %s", exc)
+        try:
+            from notify import send_telegram
+
+            send_telegram(f"ERROR: daily loop aborted — invalid PROJECT_DIR ({exc})")
+        except Exception:  # noqa: BLE001
+            pass
+        state = load_state()
+        append_log(state, f"Aborted: sandbox {exc}", level="ERROR")
+        save_state(state)
+        return {
+            "status": "error",
+            "error": str(exc),
+            "summary": f"Aborted: {exc}",
+        }
+
     state = load_state()
-    append_log(state, "Daily loop started")
+    append_log(state, f"Daily loop started — project={project_dir}")
     tracker = CostTracker()
+
+    # Consume user_directive for this run (already injected into plan task via tasks.py)
+    directive = (state.get("user_directive") or "").strip()
+    if directive:
+        append_log(state, f"USER DIRECTIVE active: {directive[:200]}")
+        save_state(state)
 
     # --- Docs-first bootstrap (before any crew work) ---
     if not skip_bootstrap and os.getenv("SKIP_BOOTSTRAP", "").lower() not in (
@@ -213,6 +244,11 @@ def run_daily_loop(*, skip_human_input: bool = False, skip_bootstrap: bool = Fal
         mark_completed(state, "plan_task", detail=plan_text[:500])
         append_log(state, "Architect completed plan_task")
         log_agent_action("Architect", "plan_task_done", detail=f"chars={len(plan_text)}")
+
+        # Directive was consumed by this plan — clear so it doesn't repeat forever
+        if state.get("user_directive"):
+            state["user_directive"] = None
+            save_state(state)
 
         needs_approval = extract_needs_approval(plan_text)
         if needs_approval:

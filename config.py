@@ -1,7 +1,8 @@
-"""Runtime configuration — PROJECT_DIR and docs paths (not frozen at import)."""
+"""Runtime configuration — PROJECT_DIR sandbox and docs paths."""
 
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 
@@ -9,8 +10,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
 BASE_DIR = Path(__file__).resolve().parent
 ENV_PATH = BASE_DIR / ".env"
+
+# Hard sandbox — agents may only work under this tree
+ALLOWED_BASE_DIR = os.path.normpath(os.path.abspath(r"C:\langs\projects"))
+
+# Only this Telegram chat may issue control commands
+AUTHORIZED_TELEGRAM_CHAT_ID = "7877332152"
 
 REQUIRED_DOCS = (
     "Architecture.md",
@@ -27,16 +36,70 @@ IGNORED_DIRS = frozenset({".git", "__pycache__", "node_modules", ".venv", "venv"
 _DEFAULT_PROJECT = BASE_DIR / "target_project"
 
 
+def validate_project_path(candidate: str | Path) -> str:
+    """Resolve and ensure path stays inside ALLOWED_BASE_DIR (no .. / symlink escape)."""
+    raw = str(candidate).strip()
+    if not raw:
+        raise ValueError("Project path is empty")
+
+    resolved = os.path.normpath(os.path.abspath(os.path.expanduser(raw)))
+    base = ALLOWED_BASE_DIR
+
+    try:
+        if os.path.commonpath([resolved, base]) != base:
+            raise ValueError(f"Path {resolved} outside allowed base {base}")
+    except ValueError as exc:
+        if "outside allowed base" in str(exc):
+            raise
+        raise ValueError(f"Path {resolved} outside allowed base {base}") from exc
+
+    real = os.path.normpath(os.path.realpath(resolved))
+    try:
+        if os.path.commonpath([real, base]) != base:
+            raise ValueError(f"Path realpath {real} outside allowed base {base}")
+    except ValueError as exc:
+        if "outside allowed base" in str(exc):
+            raise
+        raise ValueError(f"Path realpath {real} outside allowed base {base}") from exc
+
+    probe = Path(resolved)
+    for node in [probe, *probe.parents]:
+        try:
+            if node.exists() and node.is_symlink():
+                raise ValueError("Symlink escape not allowed")
+        except OSError:
+            break
+        if str(node) == base or node == Path(base):
+            break
+
+    if os.path.islink(resolved) or real != resolved:
+        if real.casefold() != resolved.casefold():
+            raise ValueError("Symlink escape not allowed")
+
+    return resolved
+
+
 def get_project_dir() -> Path:
-    """Resolve current project directory from env (updated when UI sets path)."""
+    """Resolve current project directory; re-validates sandbox on every read."""
     raw = os.getenv("PROJECT_DIR", str(_DEFAULT_PROJECT)).strip() or str(_DEFAULT_PROJECT)
-    return Path(raw).expanduser().resolve()
+    try:
+        from state import load_state
+
+        state_dir = (load_state().get("project_dir") or "").strip()
+        if state_dir:
+            raw = state_dir
+    except Exception:  # noqa: BLE001
+        pass
+
+    validated = validate_project_path(raw)
+    return Path(validated)
 
 
 def set_project_dir(path: str | Path) -> Path:
-    """Set PROJECT_DIR in process env and persist to .env + state."""
-    resolved = Path(path).expanduser().resolve()
+    """Set PROJECT_DIR in process env and persist to .env + state (sandbox-gated)."""
+    resolved = Path(validate_project_path(path))
     resolved.mkdir(parents=True, exist_ok=True)
+    resolved = Path(validate_project_path(resolved))
     (resolved / "docs").mkdir(parents=True, exist_ok=True)
     os.environ["PROJECT_DIR"] = str(resolved)
     _upsert_env_key("PROJECT_DIR", str(resolved))
@@ -53,6 +116,44 @@ def set_project_dir(path: str | Path) -> Path:
     return resolved
 
 
+def resolve_project_under_base(folder_name: str) -> str:
+    """Map a folder name / relative path under ALLOWED_BASE_DIR to an absolute path."""
+    name = (folder_name or "").strip().strip("/\\")
+    if not name:
+        raise ValueError("Folder name required")
+    parts = Path(name).parts
+    if any(p == ".." for p in parts):
+        raise ValueError("Path traversal (..) not allowed")
+    if os.path.isabs(name):
+        return validate_project_path(name)
+    candidate = os.path.join(ALLOWED_BASE_DIR, name)
+    return validate_project_path(candidate)
+
+
+def list_allowed_projects() -> list[str]:
+    """Directories under ALLOWED_BASE_DIR (top-level + one nested level)."""
+    root = Path(ALLOWED_BASE_DIR)
+    if not root.is_dir():
+        return []
+    names: list[str] = []
+    for child in sorted(root.iterdir(), key=lambda p: p.name.lower()):
+        if not child.is_dir():
+            continue
+        if child.name in IGNORED_DIRS or child.name.startswith("."):
+            continue
+        names.append(child.name)
+        try:
+            for nested in sorted(child.iterdir(), key=lambda p: p.name.lower()):
+                if not nested.is_dir():
+                    continue
+                if nested.name in IGNORED_DIRS or nested.name.startswith("."):
+                    continue
+                names.append(f"{child.name}/{nested.name}")
+        except OSError:
+            continue
+    return names
+
+
 def get_docs_dir() -> Path:
     return get_project_dir() / "docs"
 
@@ -62,7 +163,10 @@ def docs_checklist(*, create_dir: bool = False, project_dir: Path | None = None)
 
     create_dir=False by default so bootstrap emptiness checks never mkdir docs/.
     """
-    root = Path(project_dir) if project_dir is not None else get_project_dir()
+    if project_dir is not None:
+        root = Path(validate_project_path(project_dir))
+    else:
+        root = get_project_dir()
     docs = root / "docs"
     if create_dir:
         docs.mkdir(parents=True, exist_ok=True)
@@ -97,6 +201,8 @@ def missing_docs(project_dir: Path | None = None) -> list[str]:
 
 def is_git_repo(path: Path | None = None) -> bool:
     root = path or get_project_dir()
+    if path is not None:
+        root = Path(validate_project_path(path))
     return (root / ".git").exists()
 
 
@@ -137,7 +243,6 @@ def _upsert_env_key(key: str, value: str) -> None:
             if not found:
                 new_lines.append(f"{key}={value}")
                 found = True
-            # drop duplicate old keys
         else:
             new_lines.append(line)
     if not found:
@@ -163,11 +268,13 @@ def read_env_settings() -> dict[str, str]:
 def write_env_settings(updates: dict[str, str]) -> None:
     for key, value in updates.items():
         if key and value is not None:
+            if key == "PROJECT_DIR":
+                set_project_dir(value)
+                continue
             _upsert_env_key(key, str(value))
             os.environ[key] = str(value)
 
 
-# Settings keys editable from the desktop UI
 EDITABLE_SETTINGS = (
     "PROJECT_DIR",
     "LLM_PROVIDER",

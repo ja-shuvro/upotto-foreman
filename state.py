@@ -30,6 +30,7 @@ DEFAULT_STATE: dict[str, Any] = {
     "last_result": None,
     "chat_history": [],
     "bootstrap": None,
+    "user_directive": None,
 }
 
 

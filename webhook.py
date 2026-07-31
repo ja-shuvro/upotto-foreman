@@ -290,7 +290,10 @@ def api_project():
     path = data.get("path") or request.form.get("path")
     if not path:
         return jsonify({"ok": False, "error": "path required"}), 400
-    resolved = set_project_dir(path)
+    try:
+        resolved = set_project_dir(path)
+    except ValueError as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 400
     return jsonify(
         {
             "ok": True,
@@ -585,9 +588,16 @@ def approve():
         text = (message.get("text") or "").strip()
 
         _reload_secrets()
-        if TELEGRAM_CHAT_ID and chat_id != str(TELEGRAM_CHAT_ID):
-            logger.warning("Ignored Telegram message from unexpected chat_id=%s", chat_id)
-            return jsonify({"ok": True, "ignored": "unexpected_chat_id"})
+        from config import AUTHORIZED_TELEGRAM_CHAT_ID
+        from telegram_chat import is_authorized_telegram_chat
+
+        if not is_authorized_telegram_chat(chat_id):
+            logger.warning(
+                "Ignored Telegram message from unauthorized chat_id=%s (authorized=%s)",
+                chat_id,
+                AUTHORIZED_TELEGRAM_CHAT_ID,
+            )
+            return jsonify({"ok": True, "ignored": "unauthorized_chat_id"})
 
         routed = handle_telegram_text(text)
         if routed["kind"] == "approve":
