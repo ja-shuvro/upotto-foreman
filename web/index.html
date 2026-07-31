@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Upotto Foreman</title>
+    <link rel="icon" href="/assets/upotto-foreman.ico" />
+    <link rel="stylesheet" href="/web/css/app.css" />
+  </head>
+  <body>
+    <div id="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="/assets/upotto-foreman.png" alt="Upotto Foreman" />
+          <div>
+            <h1>Upotto<br />Foreman</h1>
+            <small>Agent control desk</small>
+          </div>
+        </div>
+
+        <button class="nav-btn active" data-view="dashboard" data-label="Dashboard"></button>
+        <button class="nav-btn" data-view="project" data-label="Project"></button>
+        <button class="nav-btn" data-view="docs" data-label="Docs"></button>
+        <button class="nav-btn" data-view="approvals" data-label="Approvals"></button>
+        <button class="nav-btn" data-view="logs" data-label="Logs"></button>
+        <button class="nav-btn" data-view="chat" data-label="Chat"></button>
+        <button class="nav-btn" data-view="settings" data-label="Settings"></button>
+
+        <div class="sidebar-foot">
+          <div class="status-chip">
+            <span id="status-pulse" class="pulse idle"></span>
+            <span id="status-label">idle</span>
+          </div>
+        </div>
+      </aside>
+
+      <section class="main">
+        <header class="topbar">
+          <div>
+            <h2 id="page-title">Dashboard</h2>
+            <p class="sub" id="page-sub">Live run status, cost, and plan</p>
+          </div>
+          <div class="top-actions">
+            <button class="btn primary" id="btn-start">Run now</button>
+            <button class="btn danger" id="btn-stop" disabled>Stop</button>
+          </div>
+        </header>
+
+        <div class="live-status-bar" id="live-status-bar">
+          <div class="live-phase">
+            <span id="live-phase-dot" class="pulse idle"></span>
+            <div>
+              <div class="live-phase-label" id="live-phase-label">Idle</div>
+              <div class="live-phase-detail muted" id="live-phase-detail">Waiting for a run</div>
+            </div>
+          </div>
+          <div class="live-cost-block">
+            <span class="muted">Live cost</span>
+            <strong id="live-cost-value">$0.000000</strong>
+          </div>
+          <div class="live-conn muted" id="live-conn">Connecting…</div>
+        </div>
+
+        <div class="content">
+          <div class="loading-overlay" id="loading">
+            <div class="loading-box">
+              <div class="skeleton" style="height: 10px; margin-bottom: 10px"></div>
+              <div class="skeleton" style="height: 10px; width: 70%; margin: 0 auto 14px"></div>
+              <div id="loading-text" class="muted">Working…</div>
+            </div>
+          </div>
+
+          <!-- Dashboard -->
+          <div class="view active" id="view-dashboard">
+            <div class="card live-feed-card" style="margin-bottom: 16px">
+              <div class="live-feed-head">
+                <h3>Live activity</h3>
+                <span class="muted" id="live-feed-hint">Real-time CrewAI steps</span>
+              </div>
+              <div class="live-feed-wrap">
+                <div class="live-feed" id="live-feed" aria-live="polite"></div>
+                <button type="button" class="jump-latest" id="jump-latest" hidden>↓ Jump to latest</button>
+              </div>
+            </div>
+
+            <div class="grid stats" style="margin-bottom: 16px">
+              <div class="card">
+                <h3>Status</h3>
+                <p class="stat-value" id="stat-status">IDLE</p>
+                <p class="stat-label">Agent runner</p>
+              </div>
+              <div class="card">
+                <h3>Last cost</h3>
+                <p class="stat-value" id="stat-cost">$0.00</p>
+                <p class="stat-label">From cost_tracker</p>
+              </div>
+              <div class="card">
+                <h3>Docs</h3>
+                <p class="stat-value" id="stat-docs">0/6</p>
+                <p class="stat-label">Required specs</p>
+              </div>
+              <div class="card">
+                <h3>Git</h3>
+                <p class="stat-value" id="stat-git">—</p>
+                <p class="stat-label">Repository</p>
+              </div>
+            </div>
+
+            <div id="approval-banner" class="card approval-card" style="display: none; margin-bottom: 16px">
+              <h3>Needs approval</h3>
+              <p class="reason" id="banner-reason"></p>
+              <button class="btn primary sm" id="btn-goto-approvals">Open Approvals</button>
+            </div>
+
+            <p class="muted" id="dash-path" style="margin: 0 0 16px"></p>
+            <div id="dash-error" class="card" style="display: none; border-color: rgba(240, 113, 120, 0.4); margin-bottom: 16px"></div>
+
+            <div class="grid two">
+              <div class="card">
+                <h3>Last summary</h3>
+                <div class="md scroll-pane" id="dash-summary"></div>
+              </div>
+              <div class="card">
+                <h3>Current plan</h3>
+                <div class="md scroll-pane tall" id="dash-plan"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Project -->
+          <div class="view" id="view-project">
+            <div class="card" style="margin-bottom: 16px">
+              <h3>Project path</h3>
+              <div class="path-field">
+                <div class="path-input">
+                  <span class="path-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    </svg>
+                  </span>
+                  <input
+                    type="text"
+                    id="project-path"
+                    spellcheck="false"
+                    autocomplete="off"
+                    placeholder="C:\langs\projects\todo-app"
+                  />
+                  <button class="btn primary" id="btn-save-project" type="button">Save</button>
+                </div>
+                <div class="path-meta" id="project-git"></div>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Spec docs checklist</h3>
+              <table style="width: 100%; border-collapse: collapse">
+                <thead>
+                  <tr class="muted" style="text-align: left">
+                    <th style="padding: 8px 4px">File</th>
+                    <th>Status</th>
+                    <th>Size</th>
+                  </tr>
+                </thead>
+                <tbody id="docs-checklist"></tbody>
+              </table>
+              <p class="muted" style="margin-top: 12px">
+                Upload / paste content via API or place files in <code>PROJECT_DIR/docs/</code>.
+              </p>
+            </div>
+          </div>
+
+          <!-- Docs viewer -->
+          <div class="view" id="view-docs">
+            <div class="docs-layout">
+              <div class="card doc-nav" id="doc-nav"></div>
+              <div class="card" id="doc-body"><p class="muted">Select a document.</p></div>
+            </div>
+          </div>
+
+          <!-- Approvals -->
+          <div class="view" id="view-approvals">
+            <div id="approval-body"></div>
+          </div>
+
+          <!-- Logs -->
+          <div class="view" id="view-logs">
+            <div class="grid two">
+              <div class="card">
+                <h3>Timeline</h3>
+                <div class="timeline" id="timeline"></div>
+              </div>
+              <div class="card">
+                <h3>File log tail</h3>
+                <pre class="scroll-pane tall muted" id="log-file" style="margin: 0; white-space: pre-wrap"></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat -->
+          <div class="view" id="view-chat">
+            <div class="card chat-shell glass">
+              <div class="chat-head">
+                <img src="/assets/upotto-foreman.png" width="36" height="36" style="border-radius: 10px" alt="" />
+                <div>
+                  <strong>Agent Chat</strong>
+                  <div class="muted" style="font-size: 12px">Desktop + Telegram · same agent</div>
+                </div>
+              </div>
+              <div class="chat-messages" id="chat-messages"></div>
+              <form class="composer" id="chat-form">
+                <input id="chat-input" placeholder="Ask about project status…" autocomplete="off" />
+                <button class="btn primary" type="submit">Send</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Settings -->
+          <div class="view" id="view-settings">
+            <div class="card" style="margin-bottom: 16px">
+              <h3>Windows Startup</h3>
+              <label class="row">
+                <input type="checkbox" id="startup-toggle" />
+                Open Upotto Foreman when Windows starts
+              </label>
+            </div>
+            <div class="card">
+              <h3>Environment</h3>
+              <div class="settings-grid" id="settings-grid"></div>
+              <p class="muted">Secret fields are masked — leave unchanged to keep current values.</p>
+              <button class="btn primary" id="btn-save-settings" style="margin-top: 12px">Save settings</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="toasts"></div>
+
+    <div class="modal-back" id="modal">
+      <div class="modal">
+        <h3 id="modal-title">Confirm</h3>
+        <p id="modal-body"></p>
+        <div class="actions">
+          <button class="btn ghost" id="modal-cancel">Cancel</button>
+          <button class="btn primary" id="modal-ok">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/web/js/app.js"></script>
+  </body>
+</html>

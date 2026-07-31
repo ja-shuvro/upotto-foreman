@@ -4,23 +4,26 @@ from __future__ import annotations
 
 from crewai import Agent, Task
 
-from config import REQUIRED_DOCS, get_docs_dir, get_project_dir
+from config import REQUIRED_DOCS, get_docs_dir, get_project_dir, load_project_brief
 
 
 def create_plan_task(architect: Agent) -> Task:
     project_dir = get_project_dir()
     docs_dir = get_docs_dir()
     docs_list = ", ".join(REQUIRED_DOCS)
+    # Same loader as bootstrap — inject brief so Architect sees identical docs
+    brief = load_project_brief(max_chars_per_file=8000)
 
     return Task(
         description=(
             f"You are planning today's engineering work for the project at: {project_dir}\n\n"
-            f"REQUIRED: Before deciding the next task, read ALL project spec docs under "
-            f"{docs_dir} using FileReadTool. Required files: {docs_list}.\n"
-            "Use list_project_files to scan the codebase after reading the docs.\n\n"
+            f"{brief}\n\n"
+            f"REQUIRED: Treat the Project Brief above as authoritative. You may also re-read "
+            f"files under {docs_dir} ({docs_list}) with FileReadTool if needed.\n"
+            "Use list_project_files to scan the codebase after reviewing the docs.\n"
+            "Also consider git state (uncommitted work) when choosing the next task.\n\n"
             "Steps:\n"
-            "1. Read PRD.md, Architecture.md, Design.md, Memory.md, Phases.md, Rules.md "
-            "from the docs folder (skip none that exist).\n"
+            "1. Internalize PRD / Architecture / Design / Memory / Phases / Rules from the brief.\n"
             "2. Scan the project structure and key source files.\n"
             "3. Use web_search for industry-standard approaches relevant to the next step "
             "in Phases.md / PRD.\n"

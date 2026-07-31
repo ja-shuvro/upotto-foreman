@@ -9,7 +9,7 @@
 <body>
   <aside class="nav">
     <div class="brand">Upotto Foreman</div>
-    <a class="{{ 'active' if active == 'dashboard' }}" href="{{ url_for('dashboard') }}">Dashboard</a>
+    <a class="{{ 'active' if active == 'dashboard' }}" href="{{ url_for('legacy_dashboard') }}">Dashboard</a>
     <a class="{{ 'active' if active == 'project' }}" href="{{ url_for('project_page') }}">Project</a>
     <a class="{{ 'active' if active == 'approvals' }}" href="{{ url_for('approvals_page') }}">Approvals</a>
     <a class="{{ 'active' if active == 'logs' }}" href="{{ url_for('logs_page') }}">Logs</a>

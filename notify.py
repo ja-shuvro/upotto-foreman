@@ -156,3 +156,15 @@ def notify_run_event(event: str, detail: str = "") -> None:
     body = title if not detail else f"{title}\n\n{detail}"
     send_telegram(body)
 
+
+def notify_bootstrap_report(mode: str, message: str, report: str = "") -> None:
+    """Send docs-first bootstrap / audit report via Telegram + email."""
+    from md_view import markdown_to_telegram_html
+
+    header = f"Bootstrap [{mode}]\n\n{message.strip()}"
+    body = header if not report else f"{header}\n\n{report.strip()}"
+    # Prefer HTML markdown for Telegram; clip happens inside send_telegram
+    html_body = markdown_to_telegram_html(body)
+    send_telegram(html_body, parse_mode="HTML")
+    send_email(f"Upotto Foreman Bootstrap — {mode}", body)
+

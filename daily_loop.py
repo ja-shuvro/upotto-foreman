@@ -121,13 +121,48 @@ def _env_skip_human() -> bool:
     return os.getenv("SKIP_HUMAN_INPUT", "").lower() in ("1", "true", "yes")
 
 
-def run_daily_loop(*, skip_human_input: bool = False) -> dict:
+def run_daily_loop(*, skip_human_input: bool = False, skip_bootstrap: bool = False) -> dict:
     setup_logging()
     logger.info("=== Daily loop started ===")
 
     state = load_state()
     append_log(state, "Daily loop started")
     tracker = CostTracker()
+
+    # --- Docs-first bootstrap (before any crew work) ---
+    if not skip_bootstrap and os.getenv("SKIP_BOOTSTRAP", "").lower() not in (
+        "1",
+        "true",
+        "yes",
+    ):
+        from bootstrap import BootstrapMode, run_bootstrap
+        from config import get_project_dir
+        from notify import notify_bootstrap_report
+
+        boot = run_bootstrap(get_project_dir())
+        append_log(state, f"Bootstrap mode={boot.mode.value}: {boot.message}")
+        notify_bootstrap_report(boot.mode.value, boot.message, boot.report)
+        state = load_state()
+        state["last_summary"] = boot.report or boot.message
+        update_after_run(state, summary=boot.report or boot.message)
+
+        if boot.stop_crew or boot.mode in (
+            BootstrapMode.EMPTY,
+            BootstrapMode.INVALID,
+            BootstrapMode.DOCS_MISSING,
+            BootstrapMode.DOCS_PRESENT,
+        ):
+            # Spec: hand back audit / generated docs for user review before agents touch code
+            logger.info("=== Daily loop stopped after bootstrap (%s) ===", boot.mode.value)
+            return {
+                "status": f"bootstrap_{boot.mode.value.lower()}",
+                "mode": boot.mode.value,
+                "message": boot.message,
+                "report": boot.report,
+                "docs_written": boot.docs_written,
+                "plan": None,
+                "summary": boot.report or boot.message,
+            }
 
     # NOTE: crewai.LLM (litellm-backed), NOT raw langchain ChatAnthropic.
     # Agent(llm=...) requires this type — passing ChatAnthropic here silently
@@ -153,6 +188,12 @@ def run_daily_loop(*, skip_human_input: bool = False) -> dict:
 
         # --- 1) Architect: plan_task ---
         log_agent_action("Architect", "plan_task_start")
+        try:
+            from live_events import emit_phase
+
+            emit_phase("Planning", "Architect planning…")
+        except Exception:  # noqa: BLE001
+            pass
         plan_crew = Crew(
             agents=[architect],
             tasks=[plan_task],
@@ -218,6 +259,12 @@ def run_daily_loop(*, skip_human_input: bool = False) -> dict:
     # --- 2) Developer: dev_task (plan injected directly into description — see below) ---
     # --- 3) Architect: summary_task (context = dev_task only; plan injected via description) ---
     log_agent_action("Developer", "dev_task_start")
+    try:
+        from live_events import emit_phase
+
+        emit_phase("Developing", "Developer implementing…")
+    except Exception:  # noqa: BLE001
+        pass
 
     # NOTE: plan_task itself is NOT re-run here, and its Task object's .output is not
     # populated in THIS Crew run — so we do not pass it as `context=[...]` (that was
@@ -290,10 +337,15 @@ def run_daily_loop(*, skip_human_input: bool = False) -> dict:
 
 def main() -> None:
     skip = "--yes" in sys.argv or "-y" in sys.argv
+    skip_boot = "--skip-bootstrap" in sys.argv
     try:
-        result = run_daily_loop(skip_human_input=skip)
+        result = run_daily_loop(skip_human_input=skip, skip_bootstrap=skip_boot)
         print("\n--- RESULT ---")
         print(f"status: {result.get('status')}")
+        if result.get("mode"):
+            print(f"bootstrap_mode: {result.get('mode')}")
+        if result.get("message"):
+            print(result["message"])
         if result.get("summary"):
             print(result["summary"])
         print(f"cost_usd: {result.get('cost', {}).get('total_cost_usd')}")

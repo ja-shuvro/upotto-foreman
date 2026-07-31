@@ -24,7 +24,7 @@ from tenacity import (
 )
 
 from code_tool import build_code_execution_tool
-from config import get_project_dir
+from config import IGNORED_DIRS, get_project_dir
 from cost_tracker import CostTracker
 
 load_dotenv()
@@ -143,7 +143,7 @@ def invoke_with_tracking(
     return response
 
 
-_IGNORED_DIRS = {".git", "__pycache__", "node_modules", ".venv", "venv"}
+_IGNORED_DIRS = IGNORED_DIRS
 
 
 class ProjectDirectoryScanTool(CrewBaseTool):

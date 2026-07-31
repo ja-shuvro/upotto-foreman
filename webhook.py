@@ -1,4 +1,4 @@
-"""Upotto Foreman — local Flask API, desktop UI, Telegram webhook."""
+"""Upotto Foreman — local Flask API, web SPA, Telegram webhook."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_from_directory,
     url_for,
 )
 
@@ -50,6 +51,13 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+try:
+    from live_events import ensure_listeners
+
+    ensure_listeners()
+except Exception:  # noqa: BLE001
+    pass
 
 app = Flask(
     __name__,
@@ -123,18 +131,37 @@ def _send_telegram_ack(text: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Pages
+# SPA + static assets
 # ---------------------------------------------------------------------------
+
+WEB_DIR = BASE_DIR / "web"
+ASSETS_DIR = BASE_DIR / "assets"
 
 
 @app.get("/")
-def dashboard():
+def spa_index():
+    return send_from_directory(WEB_DIR, "index.html")
+
+
+@app.get("/web/<path:filename>")
+def spa_static(filename: str):
+    return send_from_directory(WEB_DIR, filename)
+
+
+@app.get("/assets/<path:filename>")
+def assets_static(filename: str):
+    return send_from_directory(ASSETS_DIR, filename)
+
+
+# Legacy Jinja pages (optional browser fallback)
+@app.get("/legacy/")
+def legacy_dashboard():
     snap = get_runner_snapshot()
     state = load_state()
     return render_template(
         "dashboard.html",
         snap=snap,
-        docs=docs_checklist(),
+        docs=docs_checklist(create_dir=True),
         git_ok=is_git_repo(),
         project_dir=str(get_project_dir()),
         cost_history=state.get("cost_history") or [],
@@ -142,25 +169,25 @@ def dashboard():
     )
 
 
-@app.get("/project")
+@app.get("/legacy/project")
 def project_page():
     return render_template(
         "project.html",
         project_dir=str(get_project_dir()),
-        docs=docs_checklist(),
+        docs=docs_checklist(create_dir=True),
         required=REQUIRED_DOCS,
         git_ok=is_git_repo(),
         active="project",
     )
 
 
-@app.get("/approvals")
+@app.get("/legacy/approvals")
 def approvals_page():
     pending = load_pending_approval() or load_state().get("pending_approval")
     return render_template("approvals.html", pending=pending, active="approvals")
 
 
-@app.get("/logs")
+@app.get("/legacy/logs")
 def logs_page():
     state = load_state()
     log_dir = BASE_DIR / "logs"
@@ -177,7 +204,7 @@ def logs_page():
     )
 
 
-@app.get("/settings")
+@app.get("/legacy/settings")
 def settings_page():
     env = read_env_settings()
     display = {}
@@ -192,7 +219,7 @@ def settings_page():
     )
 
 
-@app.get("/chat")
+@app.get("/legacy/chat")
 def chat_page():
     state = load_state()
     return render_template(
@@ -222,10 +249,39 @@ def health():
 @app.get("/api/status")
 def api_status():
     snap = get_runner_snapshot()
-    snap["docs"] = docs_checklist()
+    snap["docs"] = docs_checklist(create_dir=True)
     snap["git_ok"] = is_git_repo()
     snap["project_dir"] = str(get_project_dir())
+    try:
+        from live_events import get_live_snapshot
+
+        live = get_live_snapshot()
+        snap["live_phase"] = live.get("phase")
+        snap["live_phase_detail"] = live.get("phase_detail")
+        snap["run_cost_usd"] = live.get("run_cost_usd")
+    except Exception:  # noqa: BLE001
+        pass
     return jsonify(snap)
+
+
+@app.get("/api/live-events")
+def api_live_events():
+    """Server-Sent Events stream of CrewAI / run activity."""
+    from flask import Response, stream_with_context
+
+    from live_events import ensure_listeners, sse_stream
+
+    ensure_listeners()
+    headers = {
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
+        "Connection": "keep-alive",
+    }
+    return Response(
+        stream_with_context(sse_stream()()),
+        mimetype="text/event-stream",
+        headers=headers,
+    )
 
 
 @app.post("/api/project")
@@ -240,14 +296,34 @@ def api_project():
             "ok": True,
             "project_dir": str(resolved),
             "git_ok": is_git_repo(resolved),
-            "docs": docs_checklist(),
+            "docs": docs_checklist(create_dir=True),
         }
     )
 
 
 @app.get("/api/docs")
 def api_docs_list():
-    return jsonify({"ok": True, "docs": docs_checklist(), "required": list(REQUIRED_DOCS)})
+    return jsonify({"ok": True, "docs": docs_checklist(create_dir=True), "required": list(REQUIRED_DOCS)})
+
+
+@app.get("/api/docs/content")
+def api_docs_content():
+    name = (request.args.get("name") or "").strip()
+    if name not in REQUIRED_DOCS:
+        return jsonify({"ok": False, "error": "invalid name", "present": False}), 400
+    path = get_docs_dir() / name
+    if not path.is_file():
+        return jsonify({"ok": True, "name": name, "present": False, "content": ""})
+    content = path.read_text(encoding="utf-8", errors="replace")
+    return jsonify(
+        {
+            "ok": True,
+            "name": name,
+            "present": path.stat().st_size > 0,
+            "content": content,
+            "size": path.stat().st_size,
+        }
+    )
 
 
 @app.post("/api/docs")
@@ -267,7 +343,7 @@ def api_docs_upload():
                 return jsonify({"ok": False, "error": f"invalid doc name: {name}"}), 400
             dest = docs_dir / name
             f.save(dest)
-        return jsonify({"ok": True, "docs": docs_checklist()})
+        return jsonify({"ok": True, "docs": docs_checklist(create_dir=True)})
 
     data = request.get_json(silent=True) or {}
     name = data.get("name")
@@ -277,7 +353,7 @@ def api_docs_upload():
     if content is None:
         return jsonify({"ok": False, "error": "content required"}), 400
     (docs_dir / name).write_text(str(content), encoding="utf-8")
-    return jsonify({"ok": True, "docs": docs_checklist()})
+    return jsonify({"ok": True, "docs": docs_checklist(create_dir=True)})
 
 
 @app.post("/api/run/start")
@@ -309,6 +385,27 @@ def api_logs():
             "file_tail": file_tail,
         }
     )
+
+
+@app.get("/api/timeline")
+def api_timeline():
+    """Toast-friendly agent timeline (log_history + optional file tail)."""
+    state = load_state()
+    lines = int(request.args.get("lines", "100"))
+    items = (state.get("log_history") or [])[-lines:]
+    log_dir = BASE_DIR / "logs"
+    file_tail = ""
+    logs = sorted(log_dir.glob("agent_*.log")) if log_dir.exists() else []
+    if logs:
+        text = logs[-1].read_text(encoding="utf-8", errors="replace")
+        file_tail = "\n".join(text.splitlines()[-min(lines, 200) :])
+    return jsonify({"ok": True, "items": items, "file_tail": file_tail})
+
+
+@app.get("/api/chat/history")
+def api_chat_history():
+    state = load_state()
+    return jsonify({"ok": True, "history": state.get("chat_history") or []})
 
 
 @app.get("/api/settings")
@@ -362,7 +459,10 @@ def api_chat():
         return jsonify({"ok": False, "error": "message required"}), 400
     from telegram_chat import answer_project_question
 
-    reply = answer_project_question(question, source="desktop")
+    source = str(data.get("source") or "webview")
+    if source not in ("desktop", "webview", "telegram"):
+        source = "webview"
+    reply = answer_project_question(question, source=source)
     return jsonify({"ok": True, "reply": reply})
 
 
@@ -415,13 +515,13 @@ def action_docs():
 @app.post("/actions/run/start")
 def action_run_start():
     start_run(skip_human_input=True)
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("legacy_dashboard"))
 
 
 @app.post("/actions/run/stop")
 def action_run_stop():
     stop_run()
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("legacy_dashboard"))
 
 
 @app.post("/actions/approve")

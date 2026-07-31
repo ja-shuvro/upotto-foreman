@@ -21,6 +21,9 @@ REQUIRED_DOCS = (
     "Rules.md",
 )
 
+# Shared ignore set for emptiness checks and project scans
+IGNORED_DIRS = frozenset({".git", "__pycache__", "node_modules", ".venv", "venv"})
+
 _DEFAULT_PROJECT = BASE_DIR / "target_project"
 
 
@@ -54,25 +57,42 @@ def get_docs_dir() -> Path:
     return get_project_dir() / "docs"
 
 
-def docs_checklist() -> list[dict]:
-    docs = get_docs_dir()
-    docs.mkdir(parents=True, exist_ok=True)
+def docs_checklist(*, create_dir: bool = False, project_dir: Path | None = None) -> list[dict]:
+    """Return presence/size for the 6 required docs.
+
+    create_dir=False by default so bootstrap emptiness checks never mkdir docs/.
+    """
+    root = Path(project_dir) if project_dir is not None else get_project_dir()
+    docs = root / "docs"
+    if create_dir:
+        docs.mkdir(parents=True, exist_ok=True)
     items = []
     for name in REQUIRED_DOCS:
         path = docs / name
+        present = path.is_file() and path.stat().st_size > 0
         items.append(
             {
                 "name": name,
                 "path": str(path),
-                "present": path.is_file() and path.stat().st_size > 0,
+                "present": present,
                 "size": path.stat().st_size if path.is_file() else 0,
             }
         )
     return items
 
 
-def all_docs_present() -> bool:
-    return all(item["present"] for item in docs_checklist())
+def all_docs_present(project_dir: Path | None = None) -> bool:
+    return all(
+        item["present"] for item in docs_checklist(create_dir=False, project_dir=project_dir)
+    )
+
+
+def missing_docs(project_dir: Path | None = None) -> list[str]:
+    return [
+        item["name"]
+        for item in docs_checklist(create_dir=False, project_dir=project_dir)
+        if not item["present"]
+    ]
 
 
 def is_git_repo(path: Path | None = None) -> bool:
@@ -80,15 +100,27 @@ def is_git_repo(path: Path | None = None) -> bool:
     return (root / ".git").exists()
 
 
-def read_doc_excerpts(max_chars_per_file: int = 2000) -> str:
-    parts: list[str] = []
-    for item in docs_checklist():
+def load_project_brief(
+    *,
+    max_chars_per_file: int | None = None,
+    project_dir: Path | None = None,
+) -> str:
+    """Load all present docs into a single 'Project Brief' block (shared by bootstrap + tasks)."""
+    parts: list[str] = ["=== PROJECT BRIEF (docs/) ==="]
+    for item in docs_checklist(create_dir=False, project_dir=project_dir):
         if not item["present"]:
-            parts.append(f"### {item['name']}\n(missing)\n")
+            parts.append(f"\n### {item['name']}\n(missing)\n")
             continue
         text = Path(item["path"]).read_text(encoding="utf-8", errors="replace")
-        parts.append(f"### {item['name']}\n{text[:max_chars_per_file]}\n")
+        if max_chars_per_file is not None:
+            text = text[:max_chars_per_file]
+        parts.append(f"\n### {item['name']}\n{text}\n")
+    parts.append("=== END PROJECT BRIEF ===")
     return "\n".join(parts)
+
+
+def read_doc_excerpts(max_chars_per_file: int = 2000) -> str:
+    return load_project_brief(max_chars_per_file=max_chars_per_file)
 
 
 def _upsert_env_key(key: str, value: str) -> None:

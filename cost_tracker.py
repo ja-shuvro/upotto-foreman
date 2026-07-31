@@ -116,6 +116,12 @@ class CostTracker:
             in_rate,
             out_rate,
         )
+        try:
+            from live_events import emit_cost
+
+            emit_cost(self.summary())
+        except Exception:  # noqa: BLE001
+            pass
         return record
 
     def extract_and_log(

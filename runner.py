@@ -77,6 +77,10 @@ def start_run(*, skip_human_input: bool = True) -> dict[str, Any]:
             notify_run_event("started", "Agent daily loop started.")
             try:
                 from daily_loop import run_daily_loop
+                from live_events import ensure_listeners, reset_run_live
+
+                ensure_listeners()
+                reset_run_live(phase="Planning")
 
                 if _stop_event.is_set():
                     _set_run_status("idle")
@@ -95,12 +99,24 @@ def start_run(*, skip_human_input: bool = True) -> dict[str, Any]:
                 status = result.get("status") or "completed"
                 if status == "pending_approval":
                     _set_run_status("pending_approval")
+                    try:
+                        from live_events import emit_phase
+
+                        emit_phase("Awaiting Approval", result.get("reason") or "")
+                    except Exception:  # noqa: BLE001
+                        pass
                     notify_run_event(
                         "pending_approval",
                         f"Paused for approval: {result.get('reason', '')}",
                     )
                 else:
                     _set_run_status("idle")
+                    try:
+                        from live_events import emit_phase
+
+                        emit_phase("Idle", f"Run finished: {status}")
+                    except Exception:  # noqa: BLE001
+                        pass
                     notify_run_event("finished", f"Run finished: {status}")
                 save_state(state)
             except Exception as exc:  # noqa: BLE001
@@ -111,6 +127,12 @@ def start_run(*, skip_human_input: bool = True) -> dict[str, Any]:
                 state["last_error"] = str(exc)
                 save_state(state)
                 _set_run_status("idle", last_error=str(exc))
+                try:
+                    from live_events import emit_phase
+
+                    emit_phase("Error", str(exc)[:300])
+                except Exception:  # noqa: BLE001
+                    pass
                 try:
                     from notify import notify_run_event
 
