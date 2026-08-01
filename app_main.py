@@ -24,6 +24,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger("app_main")
 
+try:
+    from path_guard import hydrate_project_dir_from_state
+
+    hydrate_project_dir_from_state()
+    logger.info("PROJECT_DIR=%s", os.getenv("PROJECT_DIR"))
+except Exception:  # noqa: BLE001
+    pass
+
 # Unique AppUserModelID so Windows taskbar uses our .ico instead of python.exe
 if sys.platform == "win32":
     try:

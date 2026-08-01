@@ -166,12 +166,91 @@ function renderDashboard(snap) {
   }
   const pending = snap.pending_approval;
   const banner = $("#approval-banner");
-  if (pending && pending.status === "pending") {
+  if (pending && (pending.status === "pending" || pending.status === "paused")) {
     banner.style.display = "block";
+    $("#banner-title").textContent =
+      pending.kind && String(pending.kind).startsWith("phase")
+        ? `Phase approval — ${pending.phase_title || pending.phase || ""}`
+        : "Needs approval";
     $("#banner-reason").textContent = pending.reason || "Approval required";
+    const planEl = $("#banner-plan");
+    if (planEl) planEl.textContent = pending.plan || "";
   } else {
     banner.style.display = "none";
   }
+  renderPhaseProgress(snap);
+  if (snap.phase_branch) updateBranchViz(snap.phase_branch, false);
+}
+
+function renderPhaseProgress(snap) {
+  const segs = $("#phase-segments");
+  const label = $("#phase-progress-label");
+  if (!segs || !label) return;
+  const analysis = snap.phase_analysis || {};
+  const phases = analysis.phases || [];
+  const total = snap.phase_total || phases.length || 0;
+  const current = snap.current_phase;
+  const completed = new Set(snap.phases_completed || []);
+  const status = (snap.phase_status || "").toLowerCase();
+
+  if (!total) {
+    label.textContent = "Phases —";
+    segs.innerHTML = "";
+    return;
+  }
+  label.textContent = current
+    ? `Phase ${current} of ${total}`
+    : `Phases ${completed.size}/${total}`;
+
+  const list =
+    phases.length > 0
+      ? phases
+      : Array.from({ length: total }, (_, i) => ({ number: i + 1, status: "pending" }));
+
+  segs.innerHTML = list
+    .map((p) => {
+      const n = p.number;
+      let cls = "pending";
+      if (completed.has(n) || p.status === "done") cls = "done";
+      else if (status === "blocked" && n === current) cls = "blocked";
+      else if (n === current) cls = "current";
+      return `<div class="phase-seg ${cls}" title="Phase ${n}: ${escapeAttr(p.title || "")}"></div>`;
+    })
+    .join("");
+}
+
+function updateBranchViz(branch, merging) {
+  const node = $("#branch-phase-node");
+  const link = $("#branch-phase-link");
+  if (node) {
+    node.textContent = branch || "phase-?";
+    node.classList.toggle("merge-flash", !!merging);
+  }
+  if (link) link.classList.toggle("active", !!merging || !!branch);
+}
+
+function appendTestLine(line, level = "info") {
+  const term = $("#test-term");
+  if (!term) return;
+  const span = document.createElement("div");
+  span.className = level === "ok" ? "ok" : level === "err" ? "err" : "info";
+  span.textContent = line;
+  term.appendChild(span);
+  while (term.children.length > 200) term.removeChild(term.firstChild);
+  term.scrollTop = term.scrollHeight;
+}
+
+function renderDiffHtml(diffText) {
+  const lines = String(diffText || "")
+    .split("\n")
+    .slice(0, 60)
+    .map((line) => {
+      const esc = escapeText(line);
+      if (line.startsWith("+") && !line.startsWith("+++")) return `<div class="add">${esc}</div>`;
+      if (line.startsWith("-") && !line.startsWith("---")) return `<div class="del">${esc}</div>`;
+      return `<div class="ctx">${esc}</div>`;
+    });
+  return `<div class="diff-block">${lines.join("")}</div>`;
 }
 
 function renderProject(snap) {
@@ -475,6 +554,31 @@ function wire() {
   };
 
   $("#btn-goto-approvals").onclick = () => setView("approvals");
+
+  const yesBtn = $("#btn-banner-yes");
+  const noBtn = $("#btn-banner-no");
+  if (yesBtn) {
+    yesBtn.onclick = async () => {
+      try {
+        await api.approve(true);
+        toast("Approved — click Run now to continue", "ok");
+        await refresh();
+      } catch (e) {
+        toast(e.message, "error");
+      }
+    };
+  }
+  if (noBtn) {
+    noBtn.onclick = async () => {
+      try {
+        await api.approve(false);
+        toast("Rejected", "warn");
+        await refresh();
+      } catch (e) {
+        toast(e.message, "error");
+      }
+    };
+  }
 }
 
 /* ——— Live SSE activity feed ——— */
@@ -526,6 +630,27 @@ function appendLiveEvent(ev) {
   if (ev.type === "cost_update") {
     if (typeof ev.total_cost_usd === "number") setLiveCost(ev.total_cost_usd);
     return;
+  }
+  if (ev.type === "test_line") {
+    const lvl = ev.meta?.level || (String(ev.message || "").toLowerCase().includes("fail") ? "err" : "info");
+    appendTestLine(ev.message || "", lvl);
+    return;
+  }
+  if (ev.type === "test_finished") {
+    appendTestLine(ev.message || "", ev.meta?.passed ? "ok" : "err");
+  }
+  if (ev.type === "phase_progress" && ev.meta) {
+    renderPhaseProgress({
+      current_phase: ev.meta.current,
+      phase_total: ev.meta.total,
+      phase_status: ev.meta.status,
+      phase_analysis: { phases: ev.meta.phases || [] },
+      phases_completed: (ev.meta.phases || []).filter((p) => p.status === "done").map((p) => p.number),
+    });
+  }
+  if (ev.type === "branch_event") {
+    const br = ev.meta?.branch || "";
+    updateBranchViz(br, ev.meta?.action === "merge");
   }
   if (ev.type === "phase") {
     setLivePhase(ev.phase || ev.message, ev.phase_detail || ev.message || "");
@@ -582,6 +707,8 @@ function appendLiveEvent(ev) {
   } else if (ev.type === "agent_execution_started") {
     row.classList.add("active-pulse");
     live.activeAgentEl = row;
+  } else if (ev.type === "code_diff" && ev.meta?.diff) {
+    msgHtml = `${escapeText(ev.message || "diff")}${renderDiffHtml(ev.meta.diff)}`;
   }
 
   const metaParts = [formatDateTime(ev.timestamp)];

@@ -168,3 +168,22 @@ def notify_bootstrap_report(mode: str, message: str, report: str = "") -> None:
     send_telegram(html_body, parse_mode="HTML")
     send_email(f"Upotto Foreman Bootstrap — {mode}", body)
 
+
+def notify_phase_approval(
+    plan: str,
+    *,
+    phase: int,
+    title: str,
+    kind: str = "phase_start",
+) -> None:
+    """Telegram gate for phase start / next-phase continue."""
+    body = (
+        f"Phase approval ({kind})\n"
+        f"Phase {phase}: {title}\n\n"
+        f"{plan.strip()}\n\n"
+        "Reply YES to approve, NO to reject, or PAUSE to wait.\n"
+        "After YES, send /runnow (or use desktop Run now) to execute."
+    )
+    send_telegram(body, parse_mode=None)
+    send_email(f"Phase {phase} approval — {title}", body)
+

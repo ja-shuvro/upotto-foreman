@@ -54,6 +54,10 @@
               <div class="live-phase-detail muted" id="live-phase-detail">Waiting for a run</div>
             </div>
           </div>
+          <div class="phase-progress" id="phase-progress" title="Phase progress">
+            <div class="phase-progress-label muted" id="phase-progress-label">Phases —</div>
+            <div class="phase-segments" id="phase-segments"></div>
+          </div>
           <div class="live-cost-block">
             <span class="muted">Live cost</span>
             <strong id="live-cost-value">$0.000000</strong>
@@ -77,9 +81,38 @@
                 <h3>Live activity</h3>
                 <span class="muted" id="live-feed-hint">Real-time CrewAI steps</span>
               </div>
-              <div class="live-feed-wrap">
-                <div class="live-feed" id="live-feed" aria-live="polite"></div>
-                <button type="button" class="jump-latest" id="jump-latest" hidden>↓ Jump to latest</button>
+              <div class="live-panels">
+                <div class="live-feed-wrap">
+                  <div class="live-feed" id="live-feed" aria-live="polite"></div>
+                  <button type="button" class="jump-latest" id="jump-latest" hidden>↓ Jump to latest</button>
+                </div>
+                <div class="live-side">
+                  <div class="branch-viz card nested" id="branch-viz">
+                    <h4>Branches</h4>
+                    <div class="branch-graph" id="branch-graph">
+                      <div class="bnode main">main</div>
+                      <div class="blink"></div>
+                      <div class="bnode dev">dev</div>
+                      <div class="blink dim" id="branch-phase-link"></div>
+                      <div class="bnode phase" id="branch-phase-node">phase-?</div>
+                    </div>
+                  </div>
+                  <div class="test-panel card nested">
+                    <h4>Test output</h4>
+                    <pre class="test-term" id="test-term"></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="approval-banner" class="card approval-card" style="display: none; margin-bottom: 16px">
+              <h3 id="banner-title">Needs approval</h3>
+              <p class="reason" id="banner-reason"></p>
+              <pre class="approval-plan muted" id="banner-plan"></pre>
+              <div class="row" style="margin-top: 12px; gap: 8px">
+                <button class="btn primary sm" id="btn-banner-yes">Approve (YES)</button>
+                <button class="btn danger sm" id="btn-banner-no">Reject (NO)</button>
+                <button class="btn ghost sm" id="btn-goto-approvals">Open Approvals</button>
               </div>
             </div>
 
@@ -104,12 +137,6 @@
                 <p class="stat-value" id="stat-git">—</p>
                 <p class="stat-label">Repository</p>
               </div>
-            </div>
-
-            <div id="approval-banner" class="card approval-card" style="display: none; margin-bottom: 16px">
-              <h3>Needs approval</h3>
-              <p class="reason" id="banner-reason"></p>
-              <button class="btn primary sm" id="btn-goto-approvals">Open Approvals</button>
             </div>
 
             <p class="muted" id="dash-path" style="margin: 0 0 16px"></p>

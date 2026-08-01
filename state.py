@@ -31,6 +31,15 @@ DEFAULT_STATE: dict[str, Any] = {
     "chat_history": [],
     "bootstrap": None,
     "user_directive": None,
+    # Phase engine
+    "current_phase": None,
+    "phase_status": "idle",  # idle | awaiting_approval | in_progress | blocked | done
+    "phase_branch": None,
+    "phases_completed": [],
+    "phase_total": 0,
+    "last_analyzed_commit": None,
+    "test_retry_count": 0,
+    "phase_analysis": None,
 }
 
 
@@ -86,7 +95,13 @@ def mark_completed(state: dict[str, Any], task_id: str, detail: str = "") -> Non
     )
 
 
-def set_pending_approval(state: dict[str, Any], reason: str, plan: str = "") -> None:
+def set_pending_approval(
+    state: dict[str, Any],
+    reason: str,
+    plan: str = "",
+    *,
+    kind: str | None = None,
+) -> None:
     pending = {
         "reason": reason,
         "plan": plan,
@@ -94,6 +109,8 @@ def set_pending_approval(state: dict[str, Any], reason: str, plan: str = "") -> 
         "status": "pending",
         "approved": False,
     }
+    if kind:
+        pending["kind"] = kind
     state["pending_approval"] = pending
     save_pending_approval(pending)
 

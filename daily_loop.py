@@ -126,23 +126,25 @@ def run_daily_loop(*, skip_human_input: bool = False, skip_bootstrap: bool = Fal
     setup_logging()
     logger.info("=== Daily loop started ===")
 
-    # Defense-in-depth: re-validate PROJECT_DIR before any agent work
+    # Fresh PROJECT_DIR from state/.env — never stale module cache
+    from path_guard import (
+        assert_project_dir_consistent,
+        hydrate_project_dir_from_state,
+        notify_path_abort,
+    )
+
+    hydrate_project_dir_from_state()
     try:
         from config import get_project_dir, validate_project_path
 
-        project_dir = get_project_dir()
+        project_dir = assert_project_dir_consistent()
         validate_project_path(project_dir)
-        logger.info("Sandbox OK — PROJECT_DIR=%s", project_dir)
-    except ValueError as exc:
-        logger.error("Sandbox validation failed — aborting run: %s", exc)
-        try:
-            from notify import send_telegram
-
-            send_telegram(f"ERROR: daily loop aborted — invalid PROJECT_DIR ({exc})")
-        except Exception:  # noqa: BLE001
-            pass
+        logger.info("Sandbox OK — active PROJECT_DIR=%s", project_dir)
+    except Exception as exc:  # noqa: BLE001
+        logger.error("PROJECT_DIR guard failed — aborting: %s", exc)
+        notify_path_abort(exc)
         state = load_state()
-        append_log(state, f"Aborted: sandbox {exc}", level="ERROR")
+        append_log(state, f"Aborted: path guard {exc}", level="ERROR")
         save_state(state)
         return {
             "status": "error",
@@ -160,31 +162,71 @@ def run_daily_loop(*, skip_human_input: bool = False, skip_bootstrap: bool = Fal
         append_log(state, f"USER DIRECTIVE active: {directive[:200]}")
         save_state(state)
 
-    # --- Docs-first bootstrap (before any crew work) ---
+    # --- Docs bootstrap only when docs are missing/invalid ---
+    # Phase engine owns Case A analysis + Case B git init when docs already exist.
     if not skip_bootstrap and os.getenv("SKIP_BOOTSTRAP", "").lower() not in (
         "1",
         "true",
         "yes",
     ):
-        from bootstrap import BootstrapMode, run_bootstrap
-        from config import get_project_dir
+        from bootstrap import BootstrapMode, resolve_bootstrap_mode, run_bootstrap
         from notify import notify_bootstrap_report
 
+        mode = resolve_bootstrap_mode(get_project_dir())
+        if mode in (BootstrapMode.DOCS_MISSING, BootstrapMode.INVALID):
+            boot = run_bootstrap(get_project_dir())
+            append_log(state, f"Bootstrap mode={boot.mode.value}: {boot.message}")
+            notify_bootstrap_report(boot.mode.value, boot.message, boot.report)
+            state = load_state()
+            state["last_summary"] = boot.report or boot.message
+            update_after_run(state, summary=boot.report or boot.message)
+            logger.info("=== Daily loop stopped after bootstrap (%s) ===", boot.mode.value)
+            return {
+                "status": f"bootstrap_{boot.mode.value.lower()}",
+                "mode": boot.mode.value,
+                "message": boot.message,
+                "report": boot.report,
+                "docs_written": boot.docs_written,
+                "plan": None,
+                "summary": boot.report or boot.message,
+            }
+
+    # Prefer phase-driven engine (default on)
+    use_phases = os.getenv("PHASE_ENGINE", "true").lower() in ("1", "true", "yes")
+    if use_phases:
+        from phase_engine import run_phase_engine
+
+        logger.info("=== Running phase engine ===")
+        result = run_phase_engine(skip_human_input=skip_human_input or _env_skip_human())
+        state = load_state()
+        if result.get("summary"):
+            state["last_summary"] = result["summary"]
+            update_after_run(state, summary=result["summary"], plan=result.get("summary"))
+        append_log(state, f"Phase engine finished: {result.get('status')}")
+        save_state(state)
+        return result
+
+    # Legacy Architect→Developer daily loop (PHASE_ENGINE=false)
+    from bootstrap import BootstrapMode, run_bootstrap
+    from notify import notify_bootstrap_report
+
+    if not skip_bootstrap and os.getenv("SKIP_BOOTSTRAP", "").lower() not in (
+        "1",
+        "true",
+        "yes",
+    ):
         boot = run_bootstrap(get_project_dir())
         append_log(state, f"Bootstrap mode={boot.mode.value}: {boot.message}")
         notify_bootstrap_report(boot.mode.value, boot.message, boot.report)
         state = load_state()
         state["last_summary"] = boot.report or boot.message
         update_after_run(state, summary=boot.report or boot.message)
-
         if boot.stop_crew or boot.mode in (
             BootstrapMode.EMPTY,
             BootstrapMode.INVALID,
             BootstrapMode.DOCS_MISSING,
             BootstrapMode.DOCS_PRESENT,
         ):
-            # Spec: hand back audit / generated docs for user review before agents touch code
-            logger.info("=== Daily loop stopped after bootstrap (%s) ===", boot.mode.value)
             return {
                 "status": f"bootstrap_{boot.mode.value.lower()}",
                 "mode": boot.mode.value,

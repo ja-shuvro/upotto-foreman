@@ -114,11 +114,28 @@ def _handle_update(update: dict[str, Any]) -> None:
 
     routed = handle_telegram_text(text)
 
+    if routed["kind"] == "pause":
+        from state import load_pending_approval, load_state, save_pending_approval, save_state
+
+        pending = load_pending_approval()
+        if pending:
+            pending["status"] = "paused"
+            pending["approved"] = False
+            pending["note"] = "paused via Telegram"
+            save_pending_approval(pending)
+            state = load_state()
+            state["pending_approval"] = pending
+            state["phase_status"] = "awaiting_approval"
+            save_state(state)
+        reply_telegram("Paused. Send YES later, then /runnow to continue.", chat_id=chat_id)
+        return
+
     if routed["kind"] == "approve":
         approved = bool(routed["approved"])
         apply_approval(approved=approved, source="telegram", note=f"chat_id={chat_id}")
         status = "approved" if approved else "rejected"
-        reply_telegram(f"Request {status}. Thanks.", chat_id=chat_id)
+        hint = " Send /runnow to execute." if approved else ""
+        reply_telegram(f"Request {status}.{hint} Thanks.", chat_id=chat_id)
         return
 
     if routed.get("async") and routed["kind"] == "chat":

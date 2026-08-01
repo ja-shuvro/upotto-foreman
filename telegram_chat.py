@@ -131,7 +131,7 @@ def help_text() -> str:
         "/newtask <text> — queue priority directive for next run\n"
         "/runnow — start daily loop now\n"
         "/help — this message\n"
-        "YES / NO — approve or reject pending change\n"
+        "YES / NO / PAUSE — phase & architecture approval\n"
         "Any other message — chat with the agent (replies here on Telegram)\n"
     )
 
@@ -201,6 +201,8 @@ def handle_telegram_text(text: str) -> dict[str, Any]:
         return {"kind": "approve", "approved": True, "reply": None}
     if upper in {"NO", "REJECT", "REJECTED", "N"}:
         return {"kind": "approve", "approved": False, "reply": None}
+    if upper in {"PAUSE", "WAIT", "STOP"}:
+        return {"kind": "pause", "approved": False, "reply": None}
 
     # Parse /command args (Telegram may send /cmd@BotName)
     if raw.startswith("/"):

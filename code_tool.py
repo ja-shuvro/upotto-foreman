@@ -12,6 +12,7 @@ from typing import Any, Type
 from pydantic import BaseModel, Field
 
 from config import get_project_dir, validate_project_path
+from path_guard import assert_project_dir_consistent, guard_write_target
 
 logger = logging.getLogger(__name__)
 
@@ -62,8 +63,6 @@ BaseTool = _base_tool_cls()
 
 
 def _is_allowed(command: str) -> bool:
-    first_word = command.strip().split()[0] if command.strip() else ""
-    # allow chained commands like "git add -A && git commit ..." — check each segment
     segments = [s.strip() for s in command.replace("&&", ";").split(";") if s.strip()]
     if not segments:
         return False
@@ -74,10 +73,57 @@ def _is_allowed(command: str) -> bool:
     return True
 
 
+def _git_block_reason(command: str) -> str | None:
+    """Extra safety net — never allow main-mutating / force git ops."""
+    try:
+        from git_safe import is_dangerous_git_command
+
+        return is_dangerous_git_command(command)
+    except Exception:  # noqa: BLE001
+        low = command.lower()
+        if "git" in low.split()[0:1] or " git " in f" {low} ":
+            if any(x in low for x in ("--force", " -f ", "push origin main", "push origin master")):
+                return "dangerous git pattern"
+            if "checkout main" in low and "merge" in low:
+                return "checkout main + merge blocked"
+        return None
+
+
 def _truncate(text: str) -> str:
     if len(text) <= MAX_OUTPUT_CHARS:
         return text
     return text[:MAX_OUTPUT_CHARS] + f"\n...[truncated, {len(text)} chars total]"
+
+
+def _stream_command_events(command: str, output: str, exit_code: int) -> None:
+    try:
+        from live_events import push_event
+
+        low = command.lower()
+        is_test = any(k in low for k in ("pytest", "npm test", "jest", "vitest"))
+        is_git = low.strip().startswith("git") or "&& git" in low
+        if is_test:
+            for line in (output or "").splitlines()[-40:]:
+                push_event(
+                    {
+                        "type": "test_line",
+                        "message": line,
+                        "meta": {"exit_code": exit_code},
+                    }
+                )
+        if is_git and ("diff" in low or "commit" in low or "merge" in low):
+            # Surface a short diff snippet when available
+            snippet = "\n".join((output or "").splitlines()[:80])
+            if snippet.strip():
+                push_event(
+                    {
+                        "type": "code_diff",
+                        "message": f"$ {command}",
+                        "meta": {"diff": snippet[:4000], "exit_code": exit_code},
+                    }
+                )
+    except Exception:  # noqa: BLE001
+        pass
 
 
 class LocalCodeExecutionTool(BaseTool):  # type: ignore[misc]
@@ -85,15 +131,18 @@ class LocalCodeExecutionTool(BaseTool):  # type: ignore[misc]
     description: str = (
         "Run a shell command (git, pytest, npm, node, pip, python) inside the "
         "target project directory. Use this to run tests and create git commits. "
-        "Commands are restricted to a safe allowlist and jailed to the project dir."
+        "Commands are restricted to a safe allowlist and jailed to the project dir. "
+        "Never merge/push to main or force-push."
     )
     args_schema: Type[BaseModel] = CodeExecutionInput
 
     def _run(self, command: str, timeout_seconds: int = 120) -> str:
         try:
-            project_dir = Path(validate_project_path(get_project_dir()))
-        except ValueError as exc:
-            logger.error("Sandbox blocked code_execution cwd: %s", exc)
+            project_dir = assert_project_dir_consistent()
+            project_dir = Path(validate_project_path(project_dir))
+            guard_write_target(project_dir, project_dir=project_dir)
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Sandbox blocked code_execution: %s", exc)
             return f"ERROR: sandbox — {exc}"
 
         if not project_dir.exists():
@@ -106,6 +155,12 @@ class LocalCodeExecutionTool(BaseTool):  # type: ignore[misc]
                 f"{', '.join(ALLOWED_COMMAND_PREFIXES)}"
             )
 
+        blocked = _git_block_reason(command)
+        if blocked:
+            logger.warning("Blocked dangerous git command (%s): %s", blocked, command)
+            return f"ERROR: git blocked — {blocked}"
+
+        logger.info("code_execution cwd=%s cmd=%s", project_dir, command[:120])
         try:
             completed = subprocess.run(
                 command,
@@ -124,12 +179,14 @@ class LocalCodeExecutionTool(BaseTool):  # type: ignore[misc]
 
         out = _truncate(completed.stdout or "")
         err = _truncate(completed.stderr or "")
-        return (
+        combined = (
             f"cwd={project_dir}\n"
             f"exit_code={completed.returncode}\n"
             f"--- stdout ---\n{out}\n"
             f"--- stderr ---\n{err}"
         )
+        _stream_command_events(command, combined, completed.returncode)
+        return combined
 
 
 def build_code_execution_tool():

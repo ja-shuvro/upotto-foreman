@@ -9,10 +9,6 @@ from typing import Any, Callable
 
 from crewai import Agent, LLM
 from crewai.tools import BaseTool as CrewBaseTool
-from crewai_tools import (
-    FileReadTool,
-    FileWriterTool,
-)
 from langchain_community.tools import DuckDuckGoSearchRun  # free, no API key needed
 from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
@@ -26,6 +22,7 @@ from tenacity import (
 from code_tool import build_code_execution_tool
 from config import IGNORED_DIRS, get_project_dir
 from cost_tracker import CostTracker
+from project_tools import ProjectFileReadTool, ProjectFileWriterTool
 
 load_dotenv()
 
@@ -35,6 +32,7 @@ DEFAULT_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5")
 
 
 def _project_dir_str() -> str:
+    """Fresh PROJECT_DIR every call — never a cached module constant."""
     return str(get_project_dir())
 
 
@@ -184,9 +182,10 @@ class DuckDuckGoSearchTool(CrewBaseTool):
 
 def create_architect(llm: Any | None = None) -> Agent:
     directory_tool = ProjectDirectoryScanTool()
-    file_read_tool = FileReadTool()
+    file_read_tool = ProjectFileReadTool()
     search_tool = DuckDuckGoSearchTool()  # free — no API key, no cost
 
+    project = _project_dir_str()
     return Agent(
         role="Senior Software Architect",
         goal=(
@@ -198,7 +197,8 @@ def create_architect(llm: Any | None = None) -> Agent:
             "production systems. You favor incremental, industry-standard changes, clear "
             "rationale, and risk-aware planning. When a change is large, irreversible, or "
             "cross-cutting, you MUST include a line exactly like: "
-            "NEEDS_APPROVAL: <reason>."
+            "NEEDS_APPROVAL: <reason>. "
+            f"The ONLY project directory you may inspect is: {project}"
         ),
         tools=[directory_tool, file_read_tool, search_tool],
         llm=llm or build_crew_llm(temperature=0.2),
@@ -209,9 +209,10 @@ def create_architect(llm: Any | None = None) -> Agent:
 
 
 def create_developer(llm: Any | None = None) -> Agent:
-    file_read_tool = FileReadTool()
-    file_writer_tool = FileWriterTool()
+    file_read_tool = ProjectFileReadTool()
+    file_writer_tool = ProjectFileWriterTool()
     code_tool = build_code_execution_tool()
+    project = _project_dir_str()
 
     return Agent(
         role="Senior Full-Stack Developer",
@@ -224,7 +225,10 @@ def create_developer(llm: Any | None = None) -> Agent:
             "You follow the Architect's plan precisely, write focused tests, and commit "
             "with a clear message. You never invent scope beyond the approved plan. "
             "If the plan contains NEEDS_APPROVAL and approval has not been granted, "
-            "you stop and report that implementation is blocked."
+            "you stop and report that implementation is blocked. "
+            "Git rules: work only on phase/* or dev branches — NEVER checkout, merge into, "
+            "rebase, or push main/master; never force-push; never delete main or dev. "
+            f"CRITICAL: Write ALL files only under {project}. Never write into any other folder."
         ),
         tools=[file_read_tool, file_writer_tool, code_tool],
         llm=llm or build_crew_llm(temperature=0.1),

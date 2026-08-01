@@ -80,19 +80,16 @@ def validate_project_path(candidate: str | Path) -> str:
 
 
 def get_project_dir() -> Path:
-    """Resolve current project directory; re-validates sandbox on every read."""
-    raw = os.getenv("PROJECT_DIR", str(_DEFAULT_PROJECT)).strip() or str(_DEFAULT_PROJECT)
-    try:
-        from state import load_state
+    """Resolve PROJECT_DIR from process env every call — never a module-level cache.
 
-        state_dir = (load_state().get("project_dir") or "").strip()
-        if state_dir:
-            raw = state_dir
-    except Exception:  # noqa: BLE001
-        pass
-
-    validated = validate_project_path(raw)
-    return Path(validated)
+    Raises EnvironmentError if unset. Always re-validates the sandbox.
+    """
+    raw = (os.getenv("PROJECT_DIR") or "").strip()
+    if not raw:
+        raise EnvironmentError(
+            "PROJECT_DIR not set — set it in .env or via /setproject / Project tab"
+        )
+    return Path(validate_project_path(raw))
 
 
 def set_project_dir(path: str | Path) -> Path:
@@ -113,6 +110,7 @@ def set_project_dir(path: str | Path) -> Path:
     except Exception:
         pass
 
+    logger.info("Active PROJECT_DIR set to %s", resolved)
     return resolved
 
 

@@ -261,6 +261,19 @@ def api_status():
         snap["run_cost_usd"] = live.get("run_cost_usd")
     except Exception:  # noqa: BLE001
         pass
+    try:
+        state = load_state()
+        snap["current_phase"] = state.get("current_phase")
+        snap["phase_status"] = state.get("phase_status")
+        snap["phase_branch"] = state.get("phase_branch")
+        snap["phases_completed"] = state.get("phases_completed") or []
+        snap["phase_total"] = state.get("phase_total") or 0
+        snap["phase_analysis"] = state.get("phase_analysis")
+        snap["test_retry_count"] = state.get("test_retry_count") or 0
+        pending = load_pending_approval() or state.get("pending_approval")
+        snap["pending_approval"] = pending
+    except Exception:  # noqa: BLE001
+        pass
     return jsonify(snap)
 
 
