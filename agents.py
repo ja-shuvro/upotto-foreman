@@ -19,7 +19,7 @@ from tenacity import (
     wait_exponential,
 )
 
-from code_tool import build_code_execution_tool
+from code_tool import build_code_execution_tools
 from config import IGNORED_DIRS, get_project_dir
 from cost_tracker import CostTracker
 from project_tools import ProjectFileReadTool, ProjectFileWriterTool
@@ -211,7 +211,7 @@ def create_architect(llm: Any | None = None) -> Agent:
 def create_developer(llm: Any | None = None) -> Agent:
     file_read_tool = ProjectFileReadTool()
     file_writer_tool = ProjectFileWriterTool()
-    code_tool = build_code_execution_tool()
+    code_tools = build_code_execution_tools()
     project = _project_dir_str()
 
     return Agent(
@@ -228,9 +228,11 @@ def create_developer(llm: Any | None = None) -> Agent:
             "you stop and report that implementation is blocked. "
             "Git rules: work only on phase/* or dev branches — NEVER checkout, merge into, "
             "rebase, or push main/master; never force-push; never delete main or dev. "
+            "To run shell commands use the tool named run_code_execution "
+            "(also registered as code_execution). "
             f"CRITICAL: Write ALL files only under {project}. Never write into any other folder."
         ),
-        tools=[file_read_tool, file_writer_tool, code_tool],
+        tools=[file_read_tool, file_writer_tool, *code_tools],
         llm=llm or build_crew_llm(temperature=0.1),
         verbose=True,
         allow_delegation=False,

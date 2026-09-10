@@ -323,7 +323,7 @@ def implement_phase(phase: PhaseInfo, *, project_dir: Path) -> dict[str, Any]:
             "Rules:\n"
             "- Follow docs/Rules.md and Architecture.md.\n"
             "- Write code + tests for this phase only.\n"
-            "- Use code_execution for tests (pytest/npm). Do NOT merge to main.\n"
+            "- Use run_code_execution (or code_execution) for tests (pytest/npm). Do NOT merge to main.\n"
             "- Do NOT checkout main or push to main.\n"
             "- Stay on the current phase branch.\n"
             "- Summarize: implemented bullets, deferred bullets, tests run.\n"
@@ -443,7 +443,7 @@ def execute_approved_phase(analysis: PhaseAnalysis | None = None) -> dict[str, A
                     f"Tests failed for Phase {phase.number}. Fix the code so tests pass.\n"
                     f"Test command: {test_cmd}\n"
                     f"Failure output:\n{(last_test.get('output') or '')[-4000:]}\n"
-                    "Do not touch main. Stay on current branch. Re-run tests via code_execution."
+                    "Do not touch main. Stay on current branch. Re-run tests via run_code_execution."
                 ),
                 expected_output="Fix report and confirmation tests were re-run.",
                 agent=developer,

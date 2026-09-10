@@ -127,12 +127,16 @@ def _stream_command_events(command: str, output: str, exit_code: int) -> None:
 
 
 class LocalCodeExecutionTool(BaseTool):  # type: ignore[misc]
-    name: str = "code_execution"
+    # Primary name matches what LLMs commonly invent ("run_code_execution").
+    # An alias tool named "code_execution" is also registered — see build_code_execution_tools.
+    name: str = "run_code_execution"
     description: str = (
-        "Run a shell command (git, pytest, npm, node, pip, python) inside the "
-        "target project directory. Use this to run tests and create git commits. "
+        "Run a shell command (git, pytest, npm, node, pip, python, ls, dir) inside the "
+        "target project directory. Alias name: code_execution. "
+        "Use this to run tests and create git commits. "
         "Commands are restricted to a safe allowlist and jailed to the project dir. "
-        "Never merge/push to main or force-push."
+        "Never merge/push to main or force-push. "
+        "Args: command (string), timeout_seconds (optional int)."
     )
     args_schema: Type[BaseModel] = CodeExecutionInput
 
@@ -189,16 +193,32 @@ class LocalCodeExecutionTool(BaseTool):  # type: ignore[misc]
         return combined
 
 
+class CodeExecutionAliasTool(LocalCodeExecutionTool):  # type: ignore[misc]
+    """Same implementation under the shorter name prompts historically used."""
+
+    name: str = "code_execution"
+
+
 def build_code_execution_tool():
-    """Prefer sandboxed CodeInterpreterTool (Docker); fall back to jailed local tool."""
+    """Single primary tool (run_code_execution). Prefer build_code_execution_tools()."""
+    return build_code_execution_tools()[0]
+
+
+def build_code_execution_tools() -> list:
+    """
+    Prefer sandboxed CodeInterpreterTool (Docker); fall back to jailed local tools.
+
+    Returns both run_code_execution and code_execution so model name drift doesn't
+    produce UNKNOWN_TOOL failures.
+    """
     try:
         from crewai_tools import CodeInterpreterTool
 
         # unsafe_mode=False -> runs in Docker sandbox, not direct on host.
-        return CodeInterpreterTool(unsafe_mode=False)
+        return [CodeInterpreterTool(unsafe_mode=False)]
     except Exception as exc:  # noqa: BLE001
         logger.warning(
             "CodeInterpreterTool unavailable/unusable (%s) — using jailed LocalCodeExecutionTool",
             exc,
         )
-        return LocalCodeExecutionTool()
+        return [LocalCodeExecutionTool(), CodeExecutionAliasTool()]

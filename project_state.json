@@ -17,20 +17,20 @@
     }
   ],
   "pending_approval": {
-    "reason": "PHASE:0:phase_start:Foundation (week 1)",
-    "plan": "Project: upotto-concierge\nPhases done: 0 — [none]\nPhases remaining: 7 — [Phase 0: Foundation (week 1), Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\nProceed with Phase 0: Foundation (week 1)?\nReply YES to approve, NO to reject, or PAUSE to wait.",
-    "requested_at": "2026-08-01T18:11:19.672327+00:00",
+    "reason": "PHASE:1:phase_start:Ingestion pipeline (week 2)",
+    "plan": "Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait.",
+    "requested_at": "2026-08-03T11:10:46.706144+00:00",
     "status": "approved",
     "approved": true,
     "kind": "phase_start",
-    "phase": 0,
-    "phase_title": "Foundation (week 1)",
+    "phase": 1,
+    "phase_title": "Ingestion pipeline (week 2)",
     "approval_options": [
       "YES",
       "NO",
       "PAUSE"
     ],
-    "resolved_at": "2026-08-01T18:12:47.555225+00:00",
+    "resolved_at": "2026-08-03T11:11:21.236100+00:00",
     "source": "telegram",
     "note": "chat_id=7877332152"
   },
@@ -219,9 +219,374 @@
       "timestamp": "2026-08-01T18:12:53.701273+00:00",
       "level": "INFO",
       "message": "Phase engine started"
+    },
+    {
+      "timestamp": "2026-08-01T20:24:28.118187+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T20:24:43.956417+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 0 — [none]\nPhases remaining: 7 — [Phase 0: Foundation (week 1), Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 0: Foundation (week 1)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-01T20:24:43.959559+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-01T20:25:15.301341+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T20:25:52.856084+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait.\n\n✅ Phase 0 complete at C:\\langs\\projects\\agents\\upotto-concierge\nCommit: 45bedef77083bb9f2fd07ec087fcfdebf8d25b10\n"
+    },
+    {
+      "timestamp": "2026-08-01T20:25:52.901664+00:00",
+      "level": "ERROR",
+      "message": "Run failed: [WinError 5] Access is denied: 'C:\\\\langs\\\\projects\\\\agents\\\\upotto-foreman\\\\project_state.tmp' -> 'C:\\\\langs\\\\projects\\\\agents\\\\upotto-foreman\\\\project_state.json'"
+    },
+    {
+      "timestamp": "2026-08-01T20:26:08.974979+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T20:33:04.861646+00:00",
+      "level": "ERROR",
+      "message": "Phase 1 blocked: Invalid response from LLM call - None or empty."
+    },
+    {
+      "timestamp": "2026-08-01T20:33:06.137764+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: blocked"
+    },
+    {
+      "timestamp": "2026-08-01T20:34:15.209898+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T20:34:19.113558+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-01T20:34:19.116738+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-01T20:34:29.761767+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T20:36:29.376229+00:00",
+      "level": "ERROR",
+      "message": "Phase 1 blocked: cannot schedule new futures after shutdown"
+    },
+    {
+      "timestamp": "2026-08-01T20:37:19.785717+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T20:37:23.420663+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-01T20:37:23.425362+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-01T20:37:40.919253+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T20:42:21.613914+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T20:42:25.446964+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-01T20:42:25.451556+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-01T20:42:35.199542+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T20:42:38.894021+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-01T20:42:38.897553+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-01T20:42:46.719744+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T20:42:50.384722+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-01T20:42:50.388094+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-01T20:43:04.936518+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T20:43:09.025984+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-01T20:43:09.030144+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-01T20:43:36.776447+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T20:53:42.483604+00:00",
+      "level": "ERROR",
+      "message": "Phase 1 blocked: Invalid response from LLM call - None or empty."
+    },
+    {
+      "timestamp": "2026-08-01T20:53:43.502181+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: blocked"
+    },
+    {
+      "timestamp": "2026-08-01T20:56:46.884324+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T20:56:50.731296+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-01T20:56:50.735399+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-01T20:57:03.580050+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T20:57:07.292184+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-01T20:57:07.295569+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-01T20:57:20.799186+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T20:57:24.439861+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-01T20:57:24.443543+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-01T20:59:15.200425+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T21:03:08.365646+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T21:03:12.173071+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-01T21:03:12.177284+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-01T21:05:05.829101+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T21:05:09.434294+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-01T21:05:09.438613+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-01T21:06:26.155979+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T21:06:29.859753+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-01T21:06:29.863483+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-01T21:07:05.356052+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T21:07:09.062993+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-01T21:07:09.066835+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-01T21:07:18.599520+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T21:07:22.192266+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-01T21:07:22.197029+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-01T21:08:38.801116+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T21:17:00.795051+00:00",
+      "level": "ERROR",
+      "message": "Phase 1 blocked: Invalid response from LLM call - None or empty."
+    },
+    {
+      "timestamp": "2026-08-01T21:17:01.810214+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: blocked"
+    },
+    {
+      "timestamp": "2026-08-01T21:28:33.441522+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T21:28:37.221850+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-01T21:28:37.226165+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-01T21:28:49.969967+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-01T21:34:13.562766+00:00",
+      "level": "ERROR",
+      "message": "Phase 1 blocked: Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4404. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account', 'code': 402, 'metadata': {'limit_source': 'openrouter_credits', 'remedy_hint': 'Add credits at https://openrouter.ai/settings/credits, or lower max_tokens / prompt size to fit your remaining balance.', 'provider_name': None, 'previous_errors': [{'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 15545. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 5285. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 2781. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4404. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4404. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 15545. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 10571. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 3523. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4404. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4404. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 3523. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 3523. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}]}}, 'user_id': 'user_3CN5C63WLiTaZw37Wz7tDJHseEr'}"
+    },
+    {
+      "timestamp": "2026-08-01T21:34:14.640604+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: blocked"
+    },
+    {
+      "timestamp": "2026-08-03T11:10:46.281490+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-03T11:10:50.515697+00:00",
+      "level": "INFO",
+      "message": "Daily summary: Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    },
+    {
+      "timestamp": "2026-08-03T11:10:50.519681+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: pending_approval"
+    },
+    {
+      "timestamp": "2026-08-03T11:11:24.744067+00:00",
+      "level": "INFO",
+      "message": "Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge"
+    },
+    {
+      "timestamp": "2026-08-03T11:11:45.484874+00:00",
+      "level": "ERROR",
+      "message": "Phase 1 blocked: Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 3253. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account', 'code': 402, 'metadata': {'limit_source': 'openrouter_credits', 'remedy_hint': 'Add credits at https://openrouter.ai/settings/credits, or lower max_tokens / prompt size to fit your remaining balance.', 'provider_name': None, 'previous_errors': [{'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 14351. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 14351. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 2568. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4066. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4879. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4066. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4066. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4066. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4066. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 3253. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 3253. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 9759. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}]}}, 'user_id': 'user_3CN5C63WLiTaZw37Wz7tDJHseEr'}"
+    },
+    {
+      "timestamp": "2026-08-03T11:11:46.618429+00:00",
+      "level": "INFO",
+      "message": "Phase engine finished: blocked"
     }
   ],
-  "last_run": "2026-08-01T18:11:24.715425+00:00",
+  "last_run": "2026-08-03T11:10:50.515689+00:00",
   "cost_history": [
     {
       "timestamp": "2026-07-30T17:29:01.324386+00:00",
@@ -258,15 +623,15 @@
       ]
     }
   ],
-  "current_plan": "Project: upotto-concierge\nPhases done: 0 — [none]\nPhases remaining: 7 — [Phase 0: Foundation (week 1), Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\nProceed with Phase 0: Foundation (week 1)?\nReply YES to approve, NO to reject, or PAUSE to wait.",
-  "last_summary": "Project: upotto-concierge\nPhases done: 0 — [none]\nPhases remaining: 7 — [Phase 0: Foundation (week 1), Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\nProceed with Phase 0: Foundation (week 1)?\nReply YES to approve, NO to reject, or PAUSE to wait.",
-  "project_dir": "C:\\langs\\projects\\agents\\upotto-concierge",
-  "run_status": "stopping",
-  "run_updated_at": "2026-08-01T18:18:25.811967+00:00",
-  "last_error": "Failed to connect to OpenAI API: Connection error.",
+  "current_plan": "Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait.",
+  "last_summary": "Project: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait.",
+  "project_dir": "C:\\langs\\projects\\fullstack\\erp_system",
+  "run_status": "running",
+  "run_updated_at": "2026-08-03T11:11:23.627981+00:00",
+  "last_error": "Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 3253. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account', 'code': 402, 'metadata': {'limit_source': 'openrouter_credits', 'remedy_hint': 'Add credits at https://openrouter.ai/settings/credits, or lower max_tokens / prompt size to fit your remaining balance.', 'provider_name': None, 'previous_errors': [{'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 14351. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 14351. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 2568. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4066. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4879. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4066. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4066. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4066. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4066. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 3253. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 3253. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 9759. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}]}}, 'user_id': 'user_3CN5C63WLiTaZw37Wz7tDJHseEr'}",
   "last_result": {
-    "status": "pending_approval",
-    "summary": "Project: upotto-concierge\nPhases done: 0 — [none]\nPhases remaining: 7 — [Phase 0: Foundation (week 1), Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\nProceed with Phase 0: Foundation (week 1)?\nReply YES to approve, NO to reject, or PAUSE to wait."
+    "status": "blocked",
+    "summary": ""
   },
   "chat_history": [
     {
@@ -367,6 +732,48 @@
       "question": "তুমি কোন মডেল ব্যাবহার করছো?",
       "answer": "## উত্তর\n\n**আমি কোন মডেল ব্যবহার করছি তা এই প্রদত্ত তথ্য থেকে নির্ধারণ করা সম্ভব নয়।**  \n\nপ্রসঙ্গ‑সামগ্রীতে শুধুমাত্র রানার স্ট্যাটাস, প্রকল্পের সারাংশ এবং কিছু ত্রুটি লগ রয়েছে; তবে ব্যবহৃত LLM‑এর নাম বা সংস্করণ উল্লেখ করা হয়নি।  \n\nযদি আপনি নির্দিষ্ট মডেল সম্পর্কে জানতে চান, দয়া করে সিস্টেম‑অ্যাডমিনিস্ট্রেটর বা ডিপ্লয়মেন্ট কনফিগারেশন (যেমন `docker-compose.yml`, CI/CD সিক্রেট, বা পরিবেশ ভেরিয়েবল) চেক করুন, যেখানে মডেল স্লাগ বা আইডি সাধারণত সংরক্ষিত থাকে।  \n\n---  \n\n*এই উত্তরটি শুধুমাত্র প্রদত্ত প্রেক্ষাপটের ভিত্তিতে তৈরি করা হয়েছে।*",
       "source": "telegram"
+    },
+    {
+      "timestamp": "2026-08-01T20:58:12.262557+00:00",
+      "question": "/rannow YES",
+      "answer": "## ✅ Phase 1 Approval Received\n\nYou responded **YES** – the Ingestion pipeline (Week 2) is now approved to run.\n\n---\n\n### What Happens Next\n- The phase engine will start **Phase 1 – Ingestion pipeline**.\n- Expected actions:\n  1. **Sitemap crawler** (BullMQ job) fetches pages, strips boilerplate, extracts main content.  \n  2. **Manual upload** support for PDF/CSV/plain‑text files.  \n  3. **Chunking** (≈500‑800 tokens, 50‑token overlap).  \n  4. **Embedding** via the configured provider and storage in **pgvector** (tenant‑scoped).  \n  5. **Hash‑check** to avoid re‑embedding unchanged pages (cost control).\n\n- **Done when:** a real restaurant site can be crawled, chunks are stored, and a test script can retrieve them by cosine similarity.\n\n---\n\n### Current Runner Status\n\n| Item | Value |\n|------|-------|\n| **Status** | **IDLE** (about to start Phase 1) |\n| **Project** | `C:\\langs\\projects\\agents\\upotto-concierge` |\n| **Last run** | 2026‑08‑01 20:57:24 UTC |\n| **Last cost** | $0.987878 |\n| **Pending approval** | **PHASE 1: phase_start – Ingestion pipeline (week 2)** |\n| **Phases completed** | 0 (Phase 0 done) |\n| **Current phase** | 1 |\n\n---\n\n### Next Log Entry (will appear shortly)\n\n```\n[2026-08-01T??:??:??.??????+00:00] Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge\n[2026-08-01T??:??:??.??????+00:00] Phase 1: Ingestion pipeline – running...\n```\n\n---\n\nIf you need to **pause** or **cancel** the run, reply with `PAUSE` or `NO`. Otherwise, sit back – the pipeline will kick off automatically. 🚀",
+      "source": "telegram"
+    },
+    {
+      "timestamp": "2026-08-01T21:03:41.658463+00:00",
+      "question": "YES /runnow",
+      "answer": "Could not reach the LLM (Error code: 400 - {'error': {'message': 'openai/qwen-2.5-coder-32b-instruct is not a valid model ID', 'code': 400}, 'user_id': 'user_3CN5C63WLiTaZw37Wz7tDJHseEr'}). Here is raw status instead:\n\nStatus: IDLE\nProject: C:\\langs\\projects\\agents\\upotto-concierge\nLast run: 2026-08-01T21:03:12.173060+00:00\nLast cost: $0.987878\nPending approval: PHASE:1:phase_start:Ingestion pipeline (week 2)\n\nLast summary:\nProject: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait.\n\nLast error: Invalid response from LLM call - None or empty.",
+      "source": "telegram"
+    },
+    {
+      "timestamp": "2026-08-01T21:05:32.853791+00:00",
+      "question": "YES /runnow",
+      "answer": "Could not reach the LLM (Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 12747. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account', 'code': 402, 'metadata': {'limit_source': 'openrouter_credits', 'remedy_hint': 'Add credits at https://openrouter.ai/settings/credits, or lower max_tokens / prompt size to fit your remaining balance.', 'provider_name': None}}, 'user_id': 'user_3CN5C63WLiTaZw37Wz7tDJHseEr'}). Here is raw status instead:\n\nStatus: IDLE\nProject: C:\\langs\\projects\\agents\\upotto-concierge\nLast run: 2026-08-01T21:05:09.434264+00:00\nLast cost: $0.987878\nPending approval: PHASE:1:phase_start:Ingestion pipeline (week 2)\n\nLast summary:\nProject: upotto-concierge\nPhases done: 1 — [Phase 0: Foundation (week 1)]\nPhases remaining: 6 — [Phase 1: Ingestion pipeline (week 2), Phase 2: Chat core + widget (weeks 3–4), Phase 3: Owner dashboard (week 5), Phase 4: Pilot launch (week 6), Phase 5: Commerce actions (weeks 7–9, only after Phase 4 validates demand), Phase 6: Monetization + scale prep (week 10+)]\n(using cached analysis — no code change detected)\nProceed with Phase 1: Ingestion pipeline (week 2)?\nReply YES to approve, NO to reject, or PAUSE to wait.\n\nLast error: Invalid response from LLM call - None or empty.",
+      "source": "telegram"
+    },
+    {
+      "timestamp": "2026-08-01T21:06:45.976367+00:00",
+      "question": "YES /runnow",
+      "answer": "## ✅ Approval Received\n\n**You replied:** `YES` (run now)  \n\nThe foreman will now move forward with **Phase 1 – Ingestion pipeline (week 2)**.\n\n---\n\n### What Happens Next\n- The phase engine will start the ingestion pipeline:\n  - **Sitemap crawler** (BullMQ job) will fetch pages, strip boiler‑plate, and extract main content.  \n  - **Manual upload** support for PDF/CSV/plain‑text will be enabled.  \n  - Content will be **chunked (500‑800 tokens, ~50 token overlap)**, embedded via the configured provider, and stored in **pgvector** scoped to the tenant.  \n  - A **hash‑check** will run on re‑crawls to avoid re‑embedding unchanged pages (cost control).  \n\n- When the pipeline finishes, you’ll receive a new daily summary indicating:\n  - Chunks stored and searchable via cosine similarity.  \n  - Any errors or warnings that occurred during crawling/embedding.  \n\n---\n\n### Current Runner Status (pre‑run)\n\n| Item | Value |\n|------|-------|\n| **Status** | `IDLE` |\n| **Project** | `C:\\langs\\projects\\agents\\upotto-concierge` |\n| **Last run** | `2026‑08‑01T21:06:29.859744+00:00` |\n| **Last cost** | `$0.987878` |\n| **Pending approval** | `PHASE:1:phase_start:Ingestion pipeline (week 2)` |\n| **Phases done** | 1 – *Foundation* |\n| **Phases remaining** | 6 – *Ingestion pipeline* → *Chat core* → *Owner dashboard* → *Pilot launch* → *Commerce actions* → *Monetization + scale* |\n\n---\n\n### Next Log Entry (will appear after start)\n\n```\n[2026-08-01T??:??:??.??????+00:00] Phase engine started — PROJECT_DIR=C:\\langs\\projects\\agents\\upotto-concierge\n[2026-08-01T??:??:??.??????+00:00] Phase 1: Ingestion pipeline initiated\n```\n\n---\n\nIf you need to **pause** or **cancel** later, just reply with `PAUSE` or `NO`. Otherwise, the system will proceed automatically.  \n\n*Running Phase 1 now…* 🚀",
+      "source": "telegram"
+    },
+    {
+      "timestamp": "2026-08-01T21:07:32.733086+00:00",
+      "question": "YES /runnow",
+      "answer": "## ✅ Approval Received\n\n**YES** – you’ve approved proceeding with **Phase 1: Ingestion pipeline (week 2)**.\n\nThe runner will now start the ingestion pipeline for the *upotto‑concierge* project.\n\n---  \n*If you need to pause or change anything later, just reply with **PAUSE** or **NO**.*",
+      "source": "telegram"
+    },
+    {
+      "timestamp": "2026-08-02T15:41:37.432493+00:00",
+      "question": "প্রজেক্ট এর অবস্থা বলো তো",
+      "answer": "Could not reach the LLM (Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4879. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account', 'code': 402, 'metadata': {'limit_source': 'openrouter_credits', 'remedy_hint': 'Add credits at https://openrouter.ai/settings/credits, or lower max_tokens / prompt size to fit your remaining balance.', 'provider_name': None, 'previous_errors': [{'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 14351. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 14351. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 2568. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4979. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 3253. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 3253. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_t",
+      "source": "telegram"
+    },
+    {
+      "timestamp": "2026-08-16T13:03:33.819310+00:00",
+      "question": "তুমি এই প্রজেক্ট এ্যানালাইসিস করে বলো এখানে গ্রসপ্রফিট আর নিট প্রফিট এর কি অবস্খা?",
+      "answer": "Could not reach the LLM (Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 6777. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account', 'code': 402, 'metadata': {'limit_source': 'openrouter_credits', 'remedy_hint': 'Add credits at https://openrouter.ai/settings/credits, or lower max_tokens / prompt size to fit your remaining balance.', 'provider_name': None, 'previous_errors': [{'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4066. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4879. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 14351. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 4979. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 14351. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_tokens. You requested up to 16000 tokens, but can only afford 6337. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'}, {'code': 402, 'message': 'This request requires more credits, or fewer max_t",
+      "source": "telegram"
     }
   ],
   "bootstrap": {
@@ -378,13 +785,15 @@
     "report_excerpt": "# 📋 SiteMind AI – Full Project Audit  \n**Date:** 1 August 2026  \n**Auditor:** Senior Software Architect  \n\n---\n\n## 1. Current State  \n\n| Aspect | Observation |\n|--------|-------------|\n| **Repository contents** | Only the six *docs/* files are present (`Architecture.md`, `Design.md`, `Memory.md`, `Phases.md`, `PRD.md`, `Rules.md`). No source code, configuration files, Docker compose, migrations, or any commit history exists. |\n| **Monorepo scaffold** | Not created. The folder layout described in **Architecture.md** (`apps/api`, `apps/dashboard`, `apps/widget`, `packages/...`, `infra/`) is missing. |\n| **Infrastructure** | No `docker‑compose.yml`, no Postgres/Redis containers, no CI/CD pipelines. |\n| **Backend** | No NestJS project, no modules (`tenant`, `auth`, `ingestion`, `chat`, …), no `llm‑adapter` package, no database models or migrations. |\n| **Frontend** | No Next.js dashboard, no Preact widget, no Vite config, no UI components. |\n| **Multi‑tenancy / security** | No guards, interceptors, JWT handling, or tenant‑scoping logic. |\n| **Git state** | The folder is **not a Git repository** (`.git` missing). No commit history to compare against the planned phases. |\n| **Documentation** | All product‑level docs are present and detailed, but they are not reflected in any code artefacts. |\n\n**Conclusion:** The project is still at **Phase 0 – “Foundation” (pre‑development)**. No code has been written, no infrastructure is provisioned, and no version‑control baseline exists.\n\n---\n\n## 2. Implemented vs. Docs  \n\n| Document | Expected Artefact (per docs) | Actual Artefact | Match? |\n|----------|------------------------------|----------------|--------|\n| **Architecture.md** – Tech stack, folder layout, multi‑tenant guard, `llm‑adapter` | NestJS API, Next.js dashboard, Preact widget, `packages/llm‑adapter`, Docker compose, pgvector, Redis, BullMQ, JWT auth, tenant‑scoping interceptor | None of the above exist in the repo | ❌ |\n| **Phases.md** – Phase 0 scaffold, DB + Redis, t"
   },
   "user_directive": null,
-  "current_phase": 0,
-  "phase_status": "in_progress",
-  "phase_branch": "phase-0-foundation-week-1",
-  "phases_completed": [],
+  "current_phase": 1,
+  "phase_status": "blocked",
+  "phase_branch": "phase-1-ingestion-pipeline-week-2",
+  "phases_completed": [
+    0
+  ],
   "phase_total": 7,
-  "last_analyzed_commit": "f76a75664833711b1e8546d9bd947d6ce0858a4a",
-  "test_retry_count": 2,
+  "last_analyzed_commit": "b67283501607e1c085485ae74d5315191f197560",
+  "test_retry_count": 0,
   "phase_analysis": {
     "project_name": "upotto-concierge",
     "phases": [
@@ -392,13 +801,13 @@
         "number": 0,
         "title": "Foundation (week 1)",
         "body": "- Monorepo scaffold (per Architecture.md structure).\n- Postgres + pgvector + Redis running via docker-compose.\n- Tenant + auth module (signup/login, JWT).\n- `llm-adapter` package with Claude + one embedding provider wired, provider-swappable interface proven with a hello-world call.\n\n**Done when:** you can create a tenant via API and get a JWT back; a test script can embed text and call Claude successfully through the adapter.",
-        "status": "current"
+        "status": "done"
       },
       {
         "number": 1,
         "title": "Ingestion pipeline (week 2)",
         "body": "- Sitemap crawler (BullMQ job): fetch pages, strip nav/footer boilerplate, extract main content.\n- Manual upload: PDF/CSV/plain text.\n- Chunking (500–800 tokens, ~50 overlap) + embedding + pgvector storage, tenant-scoped.\n- Re-crawl hash-check to avoid re-embedding unchanged pages (cost control from day 1).\n\n**Done when:** pointing the crawler at a real restaurant site produces retrievable, tenant-scoped chunks you can query by cosine similarity from a script.",
-        "status": "pending"
+        "status": "current"
       },
       {
         "number": 2,
@@ -431,19 +840,20 @@
         "status": "pending"
       }
     ],
-    "done": [],
-    "remaining": [
+    "done": [
       {
         "number": 0,
         "title": "Foundation (week 1)",
         "body": "- Monorepo scaffold (per Architecture.md structure).\n- Postgres + pgvector + Redis running via docker-compose.\n- Tenant + auth module (signup/login, JWT).\n- `llm-adapter` package with Claude + one embedding provider wired, provider-swappable interface proven with a hello-world call.\n\n**Done when:** you can create a tenant via API and get a JWT back; a test script can embed text and call Claude successfully through the adapter.",
-        "status": "current"
-      },
+        "status": "done"
+      }
+    ],
+    "remaining": [
       {
         "number": 1,
         "title": "Ingestion pipeline (week 2)",
         "body": "- Sitemap crawler (BullMQ job): fetch pages, strip nav/footer boilerplate, extract main content.\n- Manual upload: PDF/CSV/plain text.\n- Chunking (500–800 tokens, ~50 overlap) + embedding + pgvector storage, tenant-scoped.\n- Re-crawl hash-check to avoid re-embedding unchanged pages (cost control from day 1).\n\n**Done when:** pointing the crawler at a real restaurant site produces retrievable, tenant-scoped chunks you can query by cosine similarity from a script.",
-        "status": "pending"
+        "status": "current"
       },
       {
         "number": 2,
@@ -477,14 +887,14 @@
       }
     ],
     "next_phase": {
-      "number": 0,
-      "title": "Foundation (week 1)",
-      "body": "- Monorepo scaffold (per Architecture.md structure).\n- Postgres + pgvector + Redis running via docker-compose.\n- Tenant + auth module (signup/login, JWT).\n- `llm-adapter` package with Claude + one embedding provider wired, provider-swappable interface proven with a hello-world call.\n\n**Done when:** you can create a tenant via API and get a JWT back; a test script can embed text and call Claude successfully through the adapter.",
+      "number": 1,
+      "title": "Ingestion pipeline (week 2)",
+      "body": "- Sitemap crawler (BullMQ job): fetch pages, strip nav/footer boilerplate, extract main content.\n- Manual upload: PDF/CSV/plain text.\n- Chunking (500–800 tokens, ~50 overlap) + embedding + pgvector storage, tenant-scoped.\n- Re-crawl hash-check to avoid re-embedding unchanged pages (cost control from day 1).\n\n**Done when:** pointing the crawler at a real restaurant site produces retrievable, tenant-scoped chunks you can query by cosine similarity from a script.",
       "status": "current"
     },
-    "last_analyzed_commit": "f76a75664833711b1e8546d9bd947d6ce0858a4a",
+    "last_analyzed_commit": "b67283501607e1c085485ae74d5315191f197560",
     "cached": false,
-    "case": "empty",
-    "summary": "Analyzed upotto-concierge: 0 done, 7 remaining. Next: Phase 0: Foundation (week 1)"
+    "case": "existing",
+    "summary": "Analyzed upotto-concierge: 1 done, 6 remaining. Next: Phase 1: Ingestion pipeline (week 2)"
   }
 }
