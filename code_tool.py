@@ -165,6 +165,10 @@ class LocalCodeExecutionTool(BaseTool):  # type: ignore[misc]
             return f"ERROR: git blocked — {blocked}"
 
         logger.info("code_execution cwd=%s cmd=%s", project_dir, command[:120])
+        env = os.environ.copy()
+        scripts_dir = str(Path(sys.executable).parent)
+        if scripts_dir not in env.get("PATH", ""):
+            env["PATH"] = f"{scripts_dir}{os.pathsep}{env.get('PATH', '')}"
         try:
             completed = subprocess.run(
                 command,
@@ -173,6 +177,7 @@ class LocalCodeExecutionTool(BaseTool):  # type: ignore[misc]
                 text=True,
                 timeout=timeout_seconds,
                 cwd=str(project_dir),
+                env=env,
             )
         except subprocess.TimeoutExpired:
             logger.error("Code execution timed out after %ss", timeout_seconds)

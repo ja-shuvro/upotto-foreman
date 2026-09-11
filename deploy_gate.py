@@ -132,10 +132,11 @@ def check_production_readiness(
                 description=(
                     f"Perform production readiness inspection for project at {project_dir}.\n\n"
                     "Checklist to assess:\n"
-                    "- All QA tests passed\n"
+                    "- All QA tests passed (verify via pytest)\n"
                     "- Architecture integrity satisfied\n"
                     "- Secrets are not hardcoded\n"
-                    "- Rollback plan exists\n\n"
+                    "- Rollback plan exists (git HEAD commit on dev)\n\n"
+                    "Keep inspection focused and concise (3-5 tool steps max). "
                     "Output READY with a deployment readiness checklist, or NOT_READY with blockers."
                 ),
                 expected_output="Production readiness evaluation with READY or NOT_READY status.",

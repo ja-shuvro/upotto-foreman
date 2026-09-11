@@ -287,7 +287,7 @@ def create_pm(llm: Any | None = None) -> Agent:
 
 def create_backend(llm: Any | None = None) -> Agent:
     file_read_tool = ProjectFileReadTool()
-    file_writer_tool = ScopedFileWriterTool(allowed_prefixes=("backend/", "server/", "api/"))
+    file_writer_tool = ScopedFileWriterTool(allowed_prefixes=("backend/", "server/", "api/", "tests/", "csv_inspector/"))
     code_tools = build_code_execution_tools()
     project = _project_dir_str()
     return Agent(
@@ -297,7 +297,7 @@ def create_backend(llm: Any | None = None) -> Agent:
             "You implement one backend task at a time, write tests, and stop. You never "
             "touch frontend files. If QA sends a bug report, you fix only that bug and "
             "return it to QA — you do not start the next task until QA passes this one. "
-            f"CRITICAL: Write ALL files only under {project}, backend/server/api paths only."
+            f"CRITICAL: Write ALL files only under {project} (backend/server/api/tests/csv_inspector paths)."
         ),
         tools=[file_read_tool, file_writer_tool, *code_tools],
         llm=llm or build_crew_llm(temperature=0.1),
@@ -375,7 +375,7 @@ def create_devops(llm: Any | None = None) -> Agent:
         llm=llm or build_crew_llm(temperature=0.1),
         verbose=True,
         allow_delegation=False,
-        max_iter=15,
+        max_iter=25,
     )
 
 
