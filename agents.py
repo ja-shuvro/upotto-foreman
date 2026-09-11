@@ -44,8 +44,8 @@ def _require_env(name: str) -> str:
 
 
 def _bare_model_name(raw: str) -> str:
-    """Strip any provider prefix the user may have typed (anthropic/, openrouter/)."""
-    for prefix in ("openrouter/anthropic/", "openrouter/", "anthropic/"):
+    """Strip any provider prefix the user may have typed (anthropic/, openrouter/, gemini/)."""
+    for prefix in ("openrouter/anthropic/", "openrouter/", "anthropic/", "gemini/"):
         if raw.startswith(prefix):
             return raw[len(prefix):]
     return raw
@@ -54,9 +54,8 @@ def _bare_model_name(raw: str) -> str:
 def build_crew_llm(*, temperature: float = 0.2) -> LLM:
     """crewai.LLM (litellm-backed) — THIS is what Agent(llm=...) must receive.
 
-    Supports either direct Anthropic API or OpenRouter, based on which key is set.
-    Set LLM_PROVIDER=openrouter in .env to route through OpenRouter instead of
-    api.anthropic.com directly.
+    Supports direct Anthropic API, OpenRouter, AgentRouter, or Gemini.
+    Set LLM_PROVIDER=gemini in .env to route through Gemini.
     """
     provider = os.getenv("LLM_PROVIDER", "anthropic").strip().lower()
     bare_model = _bare_model_name(os.getenv("ANTHROPIC_MODEL", DEFAULT_MODEL).strip())
@@ -80,6 +79,22 @@ def build_crew_llm(*, temperature: float = 0.2) -> LLM:
         os.environ.setdefault("OPENROUTER_API_KEY", api_key)
         return LLM(
             model=f"openrouter/{bare_model}",
+            api_key=api_key,
+            temperature=temperature,
+            max_tokens=int(os.getenv("ANTHROPIC_MAX_TOKENS", "8192")),
+        )
+
+    if provider == "gemini":
+        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            api_key = _require_env("GEMINI_API_KEY")
+        os.environ.setdefault("GEMINI_API_KEY", api_key)
+        os.environ.setdefault("GOOGLE_API_KEY", api_key)
+        model_name = os.getenv("GEMINI_MODEL") or (bare_model if "gemini" in bare_model else "gemini-2.0-flash")
+        model_name = _bare_model_name(model_name)
+        return LLM(
+            model=f"gemini/{model_name}",
+            provider="litellm",
             api_key=api_key,
             temperature=temperature,
             max_tokens=int(os.getenv("ANTHROPIC_MAX_TOKENS", "8192")),
@@ -202,6 +217,137 @@ def create_architect(llm: Any | None = None) -> Agent:
         ),
         tools=[directory_tool, file_read_tool, search_tool],
         llm=llm or build_crew_llm(temperature=0.2),
+        verbose=True,
+        allow_delegation=False,
+        max_iter=15,
+    )
+
+
+class ScopedFileWriterTool(ProjectFileWriterTool):
+    """Same as ProjectFileWriterTool but rejects writes outside `allowed_prefixes`."""
+
+    allowed_prefixes: tuple[str, ...] = ()
+
+    def _run(self, filename: str, content: str, directory: str | None = "./", overwrite: str | bool = True) -> str:
+        rel = os.path.normpath(os.path.join(directory or "./", filename)).replace("\\", "/")
+        if self.allowed_prefixes and not any(rel.startswith(p) for p in self.allowed_prefixes):
+            return f"ERROR: path '{rel}' outside allowed scope {self.allowed_prefixes}"
+        return super()._run(filename=filename, content=content, directory=directory, overwrite=overwrite)
+
+
+def create_pm(llm: Any | None = None) -> Agent:
+    directory_tool = ProjectDirectoryScanTool()
+    file_read_tool = ProjectFileReadTool()
+    project = _project_dir_str()
+    return Agent(
+        role="Project Manager",
+        goal=(
+            "Take the Architect's approved architecture and break it into ordered phases, "
+            "then phases into small backend/frontend tasks with clear dependencies."
+        ),
+        backstory=(
+            "You are a Senior Technical Project Manager. You never write code. You output "
+            "task lists as: task_id, role (backend|frontend), title, depends_on, acceptance "
+            "criteria. You resolve task ordering so no engineer is ever blocked on an "
+            "unfinished dependency. "
+            f"The ONLY project directory you may inspect is: {project}"
+        ),
+        tools=[directory_tool, file_read_tool],
+        llm=llm or build_crew_llm(temperature=0.2),
+        verbose=True,
+        allow_delegation=False,
+        max_iter=15,
+    )
+
+
+def create_backend(llm: Any | None = None) -> Agent:
+    file_read_tool = ProjectFileReadTool()
+    file_writer_tool = ScopedFileWriterTool(allowed_prefixes=("backend/", "server/", "api/"))
+    code_tools = build_code_execution_tools()
+    project = _project_dir_str()
+    return Agent(
+        role="Senior Backend Engineer",
+        goal="Complete the assigned backend task from the PM, then hand off to QA.",
+        backstory=(
+            "You implement one backend task at a time, write tests, and stop. You never "
+            "touch frontend files. If QA sends a bug report, you fix only that bug and "
+            "return it to QA — you do not start the next task until QA passes this one. "
+            f"CRITICAL: Write ALL files only under {project}, backend/server/api paths only."
+        ),
+        tools=[file_read_tool, file_writer_tool, *code_tools],
+        llm=llm or build_crew_llm(temperature=0.1),
+        verbose=True,
+        allow_delegation=False,
+        max_iter=25,
+    )
+
+
+def create_frontend(llm: Any | None = None) -> Agent:
+    file_read_tool = ProjectFileReadTool()
+    file_writer_tool = ScopedFileWriterTool(allowed_prefixes=("frontend/", "client/", "web/", "src/"))
+    code_tools = build_code_execution_tools()
+    project = _project_dir_str()
+    return Agent(
+        role="Senior Frontend Engineer",
+        goal="Complete the assigned frontend task from the PM, then hand off to QA.",
+        backstory=(
+            "You implement one frontend task at a time, write tests, and stop. You never "
+            "touch backend files. If QA sends a bug report, you fix only that bug and "
+            "return it to QA — you do not start the next task until QA passes this one. "
+            f"CRITICAL: Write ALL files only under {project}, frontend/client/web/src paths only."
+        ),
+        tools=[file_read_tool, file_writer_tool, *code_tools],
+        llm=llm or build_crew_llm(temperature=0.1),
+        verbose=True,
+        allow_delegation=False,
+        max_iter=25,
+    )
+
+
+def create_qa(llm: Any | None = None) -> Agent:
+    file_read_tool = ProjectFileReadTool()
+    code_tools = build_code_execution_tools()
+    project = _project_dir_str()
+    return Agent(
+        role="QA Tester",
+        goal=(
+            "Verify the implemented task against its acceptance criteria — functional, "
+            "edge cases, error handling — and return PASS or a structured bug report."
+        ),
+        backstory=(
+            "You are a meticulous QA Tester. You run tests via run_code_execution, read "
+            "the changed files, and check them against the task's acceptance criteria. "
+            "On failure you output exactly: Bug ID / Task ID / Severity / Steps to "
+            "Reproduce / Expected / Actual. You never write or fix code yourself. "
+            f"The ONLY project directory you may inspect is: {project}"
+        ),
+        tools=[file_read_tool, *code_tools],
+        llm=llm or build_crew_llm(temperature=0.1),
+        verbose=True,
+        allow_delegation=False,
+        max_iter=15,
+    )
+
+
+def create_devops(llm: Any | None = None) -> Agent:
+    file_read_tool = ProjectFileReadTool()
+    code_tools = build_code_execution_tools()
+    project = _project_dir_str()
+    return Agent(
+        role="Senior DevOps Engineer",
+        goal=(
+            "Decide production readiness after QA has passed all phases — never deploy "
+            "on a hunch."
+        ),
+        backstory=(
+            "You check: all QA passed, architecture checks satisfied, rollback plan "
+            "exists, secrets are not hardcoded, CI/tests green. You output READY or "
+            "NOT_READY with a checklist. You never merge to main/deploy without an "
+            "explicit human YES via the existing Telegram approval flow. "
+            f"The ONLY project directory you may inspect is: {project}"
+        ),
+        tools=[file_read_tool, *code_tools],
+        llm=llm or build_crew_llm(temperature=0.1),
         verbose=True,
         allow_delegation=False,
         max_iter=15,

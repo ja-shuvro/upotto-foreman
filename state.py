@@ -40,6 +40,7 @@ DEFAULT_STATE: dict[str, Any] = {
     "last_analyzed_commit": None,
     "test_retry_count": 0,
     "phase_analysis": None,
+    "tasks": [],
 }
 
 

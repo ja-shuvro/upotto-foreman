@@ -298,15 +298,23 @@ def _extract_bullets(text: str, limit: int = 8) -> list[str]:
 
 
 def implement_phase(phase: PhaseInfo, *, project_dir: Path) -> dict[str, Any]:
-    """Run Developer crew focused on a single phase."""
+    """Run engineer tasks for a single phase and verify each with QA bug-loop."""
     from crewai import Crew, Process
+    from crewai import Task as CrewTask
 
-    from agents import build_crew_llm, create_developer
+    from agents import build_crew_llm, create_backend, create_frontend
     from config import load_project_brief
-    from crewai import Task
+    from qa_engine import run_qa_check
+    from tasks import (
+        _save_tasks,
+        create_task,
+        get_all_tasks,
+        get_task,
+        get_tasks_by_phase,
+        update_task_status,
+    )
 
     llm = build_crew_llm()
-    developer = create_developer(llm)
     brief = load_project_brief(max_chars_per_file=6000, project_dir=project_dir)
 
     directive = ""
@@ -314,32 +322,79 @@ def implement_phase(phase: PhaseInfo, *, project_dir: Path) -> dict[str, Any]:
     if (state.get("user_directive") or "").strip():
         directive = f"USER DIRECTIVE (priority): {state['user_directive']}\n\n"
 
-    task = Task(
-        description=(
-            f"{directive}"
-            f"Implement PHASE {phase.number}: {phase.title} for project at {project_dir}.\n\n"
-            f"Phase requirements:\n{phase.body or phase.title}\n\n"
-            f"{brief}\n\n"
-            "Rules:\n"
-            "- Follow docs/Rules.md and Architecture.md.\n"
-            "- Write code + tests for this phase only.\n"
-            "- Use run_code_execution (or code_execution) for tests (pytest/npm). Do NOT merge to main.\n"
-            "- Do NOT checkout main or push to main.\n"
-            "- Stay on the current phase branch.\n"
-            "- Summarize: implemented bullets, deferred bullets, tests run.\n"
-        ),
-        expected_output=(
-            "Implementation report with Implemented:/Deferred:/Tests: sections and file list."
-        ),
-        agent=developer,
-    )
-    _emit("phase_ui", f"Developing Phase {phase.number}", phase="Developing")
-    crew = Crew(agents=[developer], tasks=[task], process=Process.sequential, verbose=True)
-    result = crew.kickoff()
-    raw = str(getattr(getattr(task, "output", None), "raw", None) or result)
+    phase_str = str(phase.number)
+    phase_tasks = get_tasks_by_phase(phase_str)
+    if not phase_tasks:
+        create_task(
+            task_id=f"phase-{phase.number}-task-1",
+            phase=phase_str,
+            role="backend",
+            title=phase.title,
+            acceptance_criteria=phase.body or phase.title,
+        )
+        phase_tasks = get_tasks_by_phase(phase_str)
+
+    for task in phase_tasks:
+        if task.status == "done":
+            continue
+
+        update_task_status(task.task_id, "in_progress")
+        is_frontend = "frontend" in (task.role or "").lower()
+        engineer = create_frontend(llm) if is_frontend else create_backend(llm)
+
+        crew_task = CrewTask(
+            description=(
+                f"{directive}"
+                f"Implement Task {task.task_id} for PHASE {phase.number}: {phase.title}\n"
+                f"Task title: {task.title}\n"
+                f"Role: {task.role}\n"
+                f"Acceptance criteria:\n{task.acceptance_criteria or task.title}\n\n"
+                f"Phase requirements:\n{phase.body or phase.title}\n\n"
+                f"{brief}\n\n"
+                "Rules:\n"
+                "- Follow docs/Rules.md and Architecture.md.\n"
+                "- Write code + tests for this task only.\n"
+                "- Use run_code_execution (or code_execution) for tests (pytest/npm). Do NOT merge to main.\n"
+                "- Do NOT checkout main or push to main.\n"
+                "- Stay on the current phase branch.\n"
+                "- Summarize: implemented bullets, deferred bullets, tests run.\n"
+            ),
+            expected_output=(
+                "Implementation report with Implemented:/Deferred:/Tests: sections and file list."
+            ),
+            agent=engineer,
+        )
+        _emit("phase_ui", f"Developing Task {task.task_id} ({task.role})", phase="Developing")
+        crew = Crew(agents=[engineer], tasks=[crew_task], process=Process.sequential, verbose=True)
+        result = crew.kickoff()
+        raw = str(getattr(getattr(crew_task, "output", None), "raw", None) or result)
+
+        current = get_task(task.task_id)
+        if current:
+            current.output = raw
+            all_tasks = get_all_tasks()
+            for idx, t in enumerate(all_tasks):
+                if t.task_id == current.task_id:
+                    all_tasks[idx] = current
+                    break
+            _save_tasks(all_tasks)
+        update_task_status(task.task_id, "qa")
+
+        _emit("phase_ui", f"QA check for Task {task.task_id}", phase="QA")
+        qa_ok = run_qa_check(task.task_id, project_dir=project_dir)
+        if not qa_ok:
+            raise RuntimeError(f"Task {task.task_id} failed QA check after retries")
+
+    updated_phase_tasks = get_tasks_by_phase(phase_str)
+    all_done = bool(updated_phase_tasks and all(t.status == "done" for t in updated_phase_tasks))
+    if not all_done:
+        raise RuntimeError(f"Phase {phase.number} has unfinished tasks after implementation")
+
+    reports = [t.output for t in updated_phase_tasks if t.output]
+    combined_raw = "\n\n".join(reports)
     return {
-        "report": raw,
-        "implemented": _extract_bullets(raw),
+        "report": combined_raw,
+        "implemented": _extract_bullets(combined_raw),
         "deferred": [],
     }
 
@@ -395,62 +450,33 @@ def execute_approved_phase(analysis: PhaseAnalysis | None = None) -> dict[str, A
             pass
         return {"status": "blocked", "error": str(exc), "phase": phase.number}
 
-    # Test loop
     test_cmd = detect_test_command(root)
-    last_test: dict[str, Any] = {}
-    for attempt in range(1, MAX_TEST_RETRIES + 1):
+    from tasks import get_tasks_by_phase
+
+    phase_tasks = get_tasks_by_phase(str(phase.number))
+    if not (phase_tasks and all(t.status == "done" for t in phase_tasks)):
         state = load_state()
-        state["test_retry_count"] = attempt
+        state["phase_status"] = "blocked"
+        append_log(
+            state,
+            f"Phase {phase.number} BLOCKED — not all tasks are done",
+            level="ERROR",
+        )
         save_state(state)
-        last_test = run_tests(root, test_cmd)
-        if last_test["ok"]:
-            break
-        if attempt >= MAX_TEST_RETRIES:
-            state = load_state()
-            state["phase_status"] = "blocked"
-            append_log(
-                state,
-                f"Phase {phase.number} BLOCKED — tests failed after {attempt} attempts",
-                level="ERROR",
-            )
-            save_state(state)
-            try:
-                from notify import send_telegram
-
-                send_telegram(
-                    f"Phase {phase.number} BLOCKED — tests failed after {attempt} attempts.\n"
-                    f"Command: {test_cmd}\n\n{(last_test.get('output') or '')[-1500:]}",
-                    parse_mode=None,
-                )
-            except Exception:  # noqa: BLE001
-                pass
-            return {
-                "status": "blocked",
-                "phase": phase.number,
-                "tests": last_test,
-                "summary": f"Phase {phase.number} blocked on tests",
-            }
-        # Fix attempt via short developer pass
-        _emit("phase_ui", f"Fixing failing tests (attempt {attempt})", phase="Developing")
         try:
-            from crewai import Crew, Process, Task
+            from notify import send_telegram
 
-            from agents import build_crew_llm, create_developer
-
-            developer = create_developer(build_crew_llm())
-            fix = Task(
-                description=(
-                    f"Tests failed for Phase {phase.number}. Fix the code so tests pass.\n"
-                    f"Test command: {test_cmd}\n"
-                    f"Failure output:\n{(last_test.get('output') or '')[-4000:]}\n"
-                    "Do not touch main. Stay on current branch. Re-run tests via run_code_execution."
-                ),
-                expected_output="Fix report and confirmation tests were re-run.",
-                agent=developer,
+            send_telegram(
+                f"Phase {phase.number} BLOCKED — QA check did not pass all tasks.",
+                parse_mode=None,
             )
-            Crew(agents=[developer], tasks=[fix], process=Process.sequential, verbose=True).kickoff()
         except Exception:  # noqa: BLE001
-            logger.exception("Test-fix pass failed")
+            pass
+        return {
+            "status": "blocked",
+            "phase": phase.number,
+            "summary": f"Phase {phase.number} blocked: QA check did not pass all tasks",
+        }
 
     commit = git_safe.commit_all(
         f"feat(phase-{phase.number}): {phase.title}",
@@ -565,19 +591,33 @@ def execute_approved_phase(analysis: PhaseAnalysis | None = None) -> dict[str, A
             extra_plan=complete_msg,
         )
 
-    complete_msg += "All phases complete. main was not touched."
+    complete_msg += "\nAll phases complete. Starting DevOps production readiness gate...\n"
     try:
         from notify import send_telegram
 
         send_telegram(complete_msg, parse_mode=None)
     except Exception:  # noqa: BLE001
         pass
+
+    from deploy_gate import check_production_readiness, request_production_approval
+
+    readiness = check_production_readiness(root)
+    if readiness.get("ready"):
+        _emit("phase_ui", "Production readiness passed, requesting approval", phase="Deploy Gate")
+        return request_production_approval(readiness, project_dir=root)
+
     state = load_state()
-    state["phase_status"] = "done"
-    clear_pending_approval(state)
+    state["phase_status"] = "blocked"
+    state["last_error"] = "Production readiness gate failed"
+    append_log(state, "Production readiness check failed with blockers", level="ERROR")
     save_state(state)
-    _emit("phase_ui", "All phases done", phase="Idle")
-    return {"status": "done", "summary": complete_msg, "phase": phase.number}
+    _emit("phase_ui", "Production readiness blocked", phase="Blocked")
+    return {
+        "status": "blocked",
+        "phase": phase.number,
+        "summary": "All phases complete, but production readiness gate failed",
+        "blocking_issues": readiness.get("blocking_issues", []),
+    }
 
 
 def run_phase_zero_setup(project_dir: Path) -> dict[str, Any]:
@@ -764,6 +804,25 @@ def run_phase_engine(*, skip_human_input: bool = True) -> dict[str, Any]:
 
     pending = load_pending_approval()
     kind = (pending or {}).get("kind") or ""
+
+    if kind == "production_deploy":
+        if is_approval_granted():
+            append_log(load_state(), "Production deploy approval granted — deploying")
+            from deploy_gate import deploy_to_production
+
+            deploy_to_production(root)
+            state = load_state()
+            state["phase_status"] = "done"
+            save_state(state)
+            return {"status": "deployed", "summary": "Production deploy completed successfully"}
+        if (pending or {}).get("status") == "rejected":
+            append_log(load_state(), "Production deploy rejected by human")
+            clear_pending_approval(load_state())
+            state = load_state()
+            state["phase_status"] = "stopped"
+            save_state(state)
+            return {"status": "rejected", "summary": "Production deploy rejected by human"}
+        return {"status": "awaiting_production_approval", "summary": "Awaiting human approval for production deployment"}
 
     if is_approval_granted() and kind in {"phase_start", "phase_next", "phase"}:
         append_log(load_state(), f"Phase approval granted ({kind}) — executing")
