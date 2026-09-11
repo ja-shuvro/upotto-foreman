@@ -51,16 +51,41 @@ def _bare_model_name(raw: str) -> str:
     return raw
 
 
-def build_crew_llm(*, temperature: float = 0.2) -> LLM:
+def has_valid_key(provider: str) -> bool:
+    """Return True if the required API key for the given provider is present in environment."""
+    p = provider.strip().lower()
+    if p == "anthropic":
+        return bool(os.getenv("ANTHROPIC_API_KEY", "").strip())
+    if p == "openrouter":
+        return bool(os.getenv("OPENROUTER_API_KEY", "").strip())
+    if p == "agentrouter":
+        return bool(os.getenv("AGENTROUTER_API_KEY", "").strip())
+    if p == "gemini":
+        return bool(os.getenv("GEMINI_API_KEY", "").strip() or os.getenv("GOOGLE_API_KEY", "").strip())
+    return False
+
+
+def build_crew_llm(
+    provider: str | None = None,
+    *,
+    temperature: float = 0.2,
+    disable_failover: bool = False,
+) -> LLM:
     """crewai.LLM (litellm-backed) — THIS is what Agent(llm=...) must receive.
 
     Supports direct Anthropic API, OpenRouter, AgentRouter, or Gemini.
     Set LLM_PROVIDER=gemini in .env to route through Gemini.
+    If LLM_FAILOVER_ENABLED=true in .env, delegates to build_crew_llm_with_failover().
     """
-    provider = os.getenv("LLM_PROVIDER", "anthropic").strip().lower()
+    if provider is None and not disable_failover:
+        if os.getenv("LLM_FAILOVER_ENABLED", "false").strip().lower() in ("true", "1", "yes"):
+            from llm_failover import build_crew_llm_with_failover
+            return build_crew_llm_with_failover(temperature=temperature)
+
+    active_provider = (provider or os.getenv("LLM_PROVIDER", "anthropic")).strip().lower()
     bare_model = _bare_model_name(os.getenv("ANTHROPIC_MODEL", DEFAULT_MODEL).strip())
 
-    if provider == "agentrouter":
+    if active_provider == "agentrouter":
         # AgentRouter is an Anthropic-Messages-API-compatible relay — same wire
         # format as api.anthropic.com, just a different base_url + key.
         api_key = _require_env("AGENTROUTER_API_KEY")
@@ -72,7 +97,7 @@ def build_crew_llm(*, temperature: float = 0.2) -> LLM:
             max_tokens=int(os.getenv("ANTHROPIC_MAX_TOKENS", "8192")),
         )
 
-    if provider == "openrouter":
+    if active_provider == "openrouter":
         api_key = _require_env("OPENROUTER_API_KEY")
         # litellm reads this env var itself for the native "openrouter/" provider path —
         # setting it explicitly avoids edge cases where only api_key= isn't picked up.
@@ -84,7 +109,7 @@ def build_crew_llm(*, temperature: float = 0.2) -> LLM:
             max_tokens=int(os.getenv("ANTHROPIC_MAX_TOKENS", "8192")),
         )
 
-    if provider == "gemini":
+    if active_provider == "gemini":
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         if not api_key:
             api_key = _require_env("GEMINI_API_KEY")

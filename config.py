@@ -276,6 +276,8 @@ def write_env_settings(updates: dict[str, str]) -> None:
 EDITABLE_SETTINGS = (
     "PROJECT_DIR",
     "LLM_PROVIDER",
+    "LLM_FAILOVER_ENABLED",
+    "LLM_PROVIDER_PRIORITY",
     "ANTHROPIC_API_KEY",
     "OPENROUTER_API_KEY",
     "AGENTROUTER_API_KEY",

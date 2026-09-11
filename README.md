@@ -31,6 +31,13 @@ Upotto Foreman supports four LLM provider backends configured via `LLM_PROVIDER`
 - `agentrouter` — AgentRouter relay (`AGENTROUTER_API_KEY`, `AGENTROUTER_BASE_URL`)
 - `gemini` — Google AI Studio Gemini API (`GEMINI_API_KEY` or `GOOGLE_API_KEY`, model via `GEMINI_MODEL`, e.g. `gemini-2.0-flash`)
 
+### Automatic Failover
+
+Enable automatic failover by setting `LLM_FAILOVER_ENABLED=true`. If the active provider fails with a retryable error (rate limit 429, quota exhaustion, auth/expired key, timeout, connection failure), Foreman automatically switches to the next configured provider.
+
+- `LLM_FAILOVER_ENABLED` — `true` | `false` (default: `false`, opt-in)
+- `LLM_PROVIDER_PRIORITY` — Comma-separated order (default: `anthropic,gemini,openrouter,agentrouter`)
+
 ## Development
 
 Install development dependencies:
